@@ -44,8 +44,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
   private static final int REQUEST_READ_CONTACTS = 0;
 
   /**
-   * A dummy authentication store containing known user names and passwords. TODO: remove after
-   * connecting to a real authentication system.
+   * A dummy authentication store containing known user names and passwords.
+   * TODO: remove after connecting to a real authentication system.
    */
   private static final String[] DUMMY_CREDENTIALS = new String[]{
       "foo@example.com:hello", "bar@example.com:world"
@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
       @Override
       public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-        if (id == R.id.login || id == EditorInfo.IME_NULL) {
+        if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
           attemptLogin();
           return true;
         }
@@ -138,9 +138,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 
   /**
-   * Attempts to sign in or register the account specified by the login form. If there are form
-   * errors (invalid email, missing fields, etc.), the errors are presented and no actual login
-   * attempt is made.
+   * Attempts to sign in or register the account specified by the login form.
+   * If there are form errors (invalid email, missing fields, etc.), the
+   * errors are presented and no actual login attempt is made.
    */
   private void attemptLogin() {
     if (mAuthTask != null) {
@@ -291,7 +291,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
   }
 
   /**
-   * Represents an asynchronous login/registration task used to authenticate the user.
+   * Represents an asynchronous login/registration task used to authenticate
+   * the user.
    */
   public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
