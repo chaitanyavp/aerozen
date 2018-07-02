@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "140175976229-8jni8gsdnmv1n9tp5jbt4b0b35age62a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "me.chaitanyavp.aerozen",
+            "certificate_hash": "e4be765424ab55536a632801fe1cafa55fd75aa5"
+          }
+        },
+        {
           "client_id": "140175976229-1mppg1obn9h1bk2qigpjksi4okk1e998.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +37,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "140175976229-1mppg1obn9h1bk2qigpjksi4okk1e998.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2
