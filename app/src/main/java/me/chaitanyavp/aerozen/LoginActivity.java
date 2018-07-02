@@ -91,6 +91,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     mLoginFormView = findViewById(R.id.login_form);
     mProgressView = findViewById(R.id.login_progress);
+
+    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestEmail()
+        .build();
   }
 
   private void populateAutoComplete() {
