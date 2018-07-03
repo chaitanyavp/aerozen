@@ -3,6 +3,7 @@ package me.chaitanyavp.aerozen;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -19,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,6 +30,12 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +50,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
    * Id to identity READ_CONTACTS permission request.
    */
   private static final int REQUEST_READ_CONTACTS = 0;
+  private static final int RC_SIGN_IN = 9001;
 
   /**
    * A dummy authentication store containing known user names and passwords.
@@ -60,6 +69,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
   private EditText mPasswordView;
   private View mProgressView;
   private View mLoginFormView;
+  private GoogleSignInClient mGoogleSignInClient;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -81,11 +91,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
       }
     });
 
-    Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-    mEmailSignInButton.setOnClickListener(new OnClickListener() {
+    findViewById(R.id.sign_in_button).setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
-        attemptLogin();
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
       }
     });
 
@@ -93,9 +103,59 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     mProgressView = findViewById(R.id.login_progress);
 
     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(getString(R.string.default_web_client_id))
         .requestEmail()
         .build();
+
+    mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
   }
+
+  protected void onStart(){
+    super.onStart();
+    GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+    updateUI(account);
+  }
+
+  private void updateUI(GoogleSignInAccount acc){
+    //TODO: Go to new activity with this account.
+  }
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+    if (requestCode == RC_SIGN_IN) {
+      // The Task returned from this call is always completed, no need to attach
+      // a listener.
+
+      Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+      try {
+        // Google Sign In was successful, authenticate with Firebase
+        GoogleSignInAccount account = task.getResult(ApiException.class);
+//        firebaseAuthWithGoogle(account);
+      } catch (ApiException e) {
+        // Google Sign In failed, update UI appropriately
+        Log.w("", "Google sign in failed", e);
+        // ...
+      }
+    }
+  }
+
+  private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+    try {
+      GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+
+      // Signed in successfully, show authenticated UI.
+      System.out.println("Ye, signed in");
+      updateUI(account);
+    } catch (ApiException e) {
+      // The ApiException status code indicates the detailed failure reason.
+      Log.w("", "signInResult:failed code=" + e.getStatusCode());
+      updateUI(null);
+    }
+  }
+
 
   private void populateAutoComplete() {
     if (!mayRequestContacts()) {
