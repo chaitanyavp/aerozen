@@ -43,6 +43,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,6 +115,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return false;
       }
     });
+
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("message");
+
+    myRef.setValue("Hello, World!");
 
     findViewById(R.id.sign_in_button).setOnClickListener(new OnClickListener() {
       @Override
