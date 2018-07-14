@@ -63,6 +63,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
   private static final int REQUEST_READ_CONTACTS = 0;
 //  private static final int RC_SIGN_IN = 9001;
   private static final int RC_SIGN_IN = 123;
+  private FirebaseUser user;
 
   /**
    * A dummy authentication store containing known user names and passwords.
@@ -116,10 +117,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
       }
     });
 
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference myRef = database.getReference("message");
-
-    myRef.setValue("Hello, World!");
+//    FirebaseDatabase database = FirebaseDatabase.getInstance();
+//    DatabaseReference myRef = database.getReference("message");
+//    DatabaseReference test = database.getReference("test");
+//    test.setValue("verybad");
+//
+//    myRef.setValue("Hello, World!");
 
     findViewById(R.id.sign_in_button).setOnClickListener(new OnClickListener() {
       @Override
@@ -170,6 +173,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
       if (resultCode == RESULT_OK) {
         // Successfully signed in
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        database.getReference().child("users").child(user.getUid()).child("user's motto").setValue("Just signed in");
         System.out.println(user);
         // ...
       } else {
