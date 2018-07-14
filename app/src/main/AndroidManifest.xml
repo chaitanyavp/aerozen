@@ -16,7 +16,7 @@
     android:theme="@style/AppTheme">
     <activity
       android:label="@string/app_name"
-      android:name=".LoginActivity">
+      android:name=".WelcomeActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
 
@@ -26,11 +26,11 @@
     <activity
       android:label="@string/title_activity_board"
       android:name=".BoardActivity"
-      android:parentActivityName=".LoginActivity"
+      android:parentActivityName=".WelcomeActivity"
       android:theme="@style/AppTheme.NoActionBar">
       <meta-data
         android:name="android.support.PARENT_ACTIVITY"
-        android:value="me.chaitanyavp.aerozen.LoginActivity" />
+        android:value="me.chaitanyavp.aerozen.WelcomeActivity" />
     </activity>
   </application>
 
