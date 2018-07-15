@@ -19,6 +19,7 @@
     android:layout_width="match_parent"
     android:layout_height="82dp"
     android:text="Welcome to aerozen"
+    android:textColor="@color/browser_actions_text_color"
     android:textSize="24sp" />
   <Button
     android:id="@+id/button2"
@@ -30,15 +31,31 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingTop="10dp"
-    android:text="My other rooms" />
+    android:text="My other rooms"
+    android:textColor="@color/browser_actions_text_color" />
   <ScrollView
     android:id="@+id/scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <LinearLayout
-      android:id="@+id/roomlist"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="vertical"></LinearLayout>
+      android:layout_height="match_parent"
+      android:orientation="vertical">
+      <LinearLayout
+        android:id="@+id/roomlist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+      </LinearLayout>
+      <TextView
+        android:id="@+id/textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:gravity="center_horizontal"
+        android:text="More rooms will appear here as you get added to them."
+        android:textColor="@android:color/darker_gray" />
+    </LinearLayout>
   </ScrollView>
 </LinearLayout>
