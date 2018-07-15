@@ -117,11 +117,10 @@ public class WelcomeActivity extends AppCompatActivity {
   }
 
   private void updateUI() {
+    roomLayout.removeAllViews();
     for (HashMap.Entry<String, String> room : user_rooms.entrySet()) {
       final String room_name = room.getKey();
       final String room_id = room.getValue();
-      Log.w("", "LOOPING THROUGH ROOM "+room_name);
-      title.setText(title.getText()+" "+room_name);
       Button roomButton = new Button(this);
       roomButton.setOnClickListener(new OnClickListener() {
         @Override
@@ -136,23 +135,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
   private void createUser(){
     final String formattedEmail = user.getEmail().replace('.', ',');
-    title.setText(title.getText() + "create called");
     database.getReference().child("emailToUid").child(formattedEmail).setValue(user.getUid());
-//    database.getReference().child("emailToUid").addListenerForSingleValueEvent(
-//        new ValueEventListener() {
-//          @Override
-//          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//            if (!dataSnapshot.hasChild(formattedEmail)) {
-//              title.setText(title.getText() + "on data called");
-//              database.getReference().child("emailToUid").child(formattedEmail).setValue(user.getUid());
-//            }
-//            title.setText(title.getText() + "on data finished");
-//          }
-//          @Override
-//          public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//          }
-//        });
   }
 
   @Override
@@ -169,11 +152,12 @@ public class WelcomeActivity extends AppCompatActivity {
 
         createUser();
 
-        database.getReference().child("user_rooms").child(user.getUid()).addListenerForSingleValueEvent(
+        database.getReference().child("user_rooms").child(user.getUid()).addValueEventListener(
             new ValueEventListener() {
               @Override
               public void onDataChange(DataSnapshot dataSnapshot) {
                 user_rooms = new HashMap<String,String>();
+                title.setText(title.getText() + " onDataChange");
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                   user_rooms.put((String) snapshot.getValue(), snapshot.getKey());
                 }
