@@ -22,10 +22,14 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -37,9 +41,13 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -49,36 +57,31 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class WelcomeActivity extends AppCompatActivity {
 
-  /**
-   * Id to identity READ_CONTACTS permission request.
-   */
-  private static final int REQUEST_READ_CONTACTS = 0;
-  //  private static final int RC_SIGN_IN = 9001;
   private static final int RC_SIGN_IN = 123;
   private FirebaseUser user;
-
-  /**
-   * A dummy authentication store containing known user names and passwords.
-   * TODO: remove after connecting to a real authentication system.
-   */
-  private static final String[] DUMMY_CREDENTIALS = new String[]{
-      "foo@example.com:hello", "bar@example.com:world"
-  };
-  /**
-   * Keep track of the login task to ensure we can cancel it if requested.
-   */
   private FirebaseAuth mAuth;
-
-  // UI references.
-  private ScrollView scrollView;
-
   private GoogleSignInClient mGoogleSignInClient;
   private FirebaseDatabase database;
+
+  private HashMap<String, String> user_rooms;
+
+  // UI references.
+  private LinearLayout roomLayout;
+  private TextView title;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_welcome);
+    Log.w("", "STARTING");
+    title = findViewById(R.id.title_text);
+    roomLayout = findViewById(R.id.roomlist);
+//    FirebaseDatabase database = FirebaseDatabase.getInstance();
+//    DatabaseReference myRef = database.getReference("message");
+//    DatabaseReference test = database.getReference("test");
+//    test.setValue("verybad");
+//
+//    myRef.setValue("Hello, World!");
 
     List<AuthUI.IdpConfig> providers = Arrays.asList(
         new AuthUI.IdpConfig.EmailBuilder().build(),
@@ -91,13 +94,6 @@ public class WelcomeActivity extends AppCompatActivity {
             .build(),
         RC_SIGN_IN);
 
-//    FirebaseDatabase database = FirebaseDatabase.getInstance();
-//    DatabaseReference myRef = database.getReference("message");
-//    DatabaseReference test = database.getReference("test");
-//    test.setValue("verybad");
-//
-//    myRef.setValue("Hello, World!");
-
     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestIdToken(getString(R.string.proper_web_client_id))
         .requestEmail()
@@ -108,13 +104,33 @@ public class WelcomeActivity extends AppCompatActivity {
 
   protected void onStart() {
     super.onStart();
-    FirebaseUser currentUser = mAuth.getCurrentUser();
-    updateUI(currentUser);
+//    if(database != null){
+//      updateUI();
+//    }
   }
 
+  private void goToRoom(String roomKey){
+    //TODO
+    Log.w("gotoroom", "going to "+roomKey);
+    title.setText("going to "+roomKey);
+  }
 
-  private void updateUI(FirebaseUser acc) {
-    //TODO: Go to new activity with this account.
+  private void updateUI() {
+    for (HashMap.Entry<String, String> room : user_rooms.entrySet()) {
+      final String room_name = room.getKey();
+      final String room_id = room.getValue();
+      Log.w("", "LOOPING THROUGH ROOM "+room_name);
+      title.setText(title.getText()+" "+room_name);
+      Button roomButton = new Button(this);
+      roomButton.setOnClickListener(new OnClickListener() {
+        @Override
+        public void onClick(View view) {
+          goToRoom(room_id);
+        }
+      });
+      roomButton.setText(room_name);
+      roomLayout.addView(roomButton);
+    }
   }
 
   @Override
@@ -126,11 +142,24 @@ public class WelcomeActivity extends AppCompatActivity {
 
       if (resultCode == RESULT_OK) {
         // Successfully signed in
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//        FirebaseDatabase database = FirebaseDatabase.getInstance();
-//        database.getReference().child("users").child(user.getUid()).child("user's motto").setValue("Just signed in");
-        System.out.println(user);
-        // ...
+        user = mAuth.getCurrentUser();
+
+        database = FirebaseDatabase.getInstance();
+        database.getReference().child("user_rooms").child(user.getUid()).addListenerForSingleValueEvent(
+            new ValueEventListener() {
+              @Override
+              public void onDataChange(DataSnapshot dataSnapshot) {
+                title.setText(title.getText() + "on data called");
+                user_rooms = new HashMap<String,String>();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                  user_rooms.put((String) snapshot.getValue(), snapshot.getKey());
+                }
+                updateUI();
+              }
+              @Override
+              public void onCancelled(DatabaseError error) {
+              }
+            });
       } else {
         // response.getError().getErrorCode() and handle the error.
         System.out.println("bad user" + response);
