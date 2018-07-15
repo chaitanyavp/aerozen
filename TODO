@@ -1,0 +1,4 @@
+Fix new board activity.
+Run code to add info to databse whenever a new user is created.
+start board activity and allow users to add others to board.
+pull information from database for board.
