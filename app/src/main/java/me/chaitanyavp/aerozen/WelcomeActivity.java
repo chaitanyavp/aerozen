@@ -43,6 +43,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class WelcomeActivity extends AppCompatActivity {
     roomLayout = findViewById(R.id.roomlist);
 //    FirebaseDatabase database = FirebaseDatabase.getInstance();
 //    DatabaseReference myRef = database.getReference("message");
-//    DatabaseReference test = database.getReference("test");
+//    DatabaseReference test = database.getReference("test").setValue("verybad");
 //    test.setValue("verybad");
 //
 //    myRef.setValue("Hello, World!");
@@ -133,6 +134,27 @@ public class WelcomeActivity extends AppCompatActivity {
     }
   }
 
+  private void createUser(){
+    final String formattedEmail = user.getEmail().replace('.', ',');
+    title.setText(title.getText() + "create called");
+    database.getReference().child("emailToUid").child(formattedEmail).setValue(user.getUid());
+//    database.getReference().child("emailToUid").addListenerForSingleValueEvent(
+//        new ValueEventListener() {
+//          @Override
+//          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//            if (!dataSnapshot.hasChild(formattedEmail)) {
+//              title.setText(title.getText() + "on data called");
+//              database.getReference().child("emailToUid").child(formattedEmail).setValue(user.getUid());
+//            }
+//            title.setText(title.getText() + "on data finished");
+//          }
+//          @Override
+//          public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//          }
+//        });
+  }
+
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
@@ -143,13 +165,14 @@ public class WelcomeActivity extends AppCompatActivity {
       if (resultCode == RESULT_OK) {
         // Successfully signed in
         user = mAuth.getCurrentUser();
-
         database = FirebaseDatabase.getInstance();
+
+        createUser();
+
         database.getReference().child("user_rooms").child(user.getUid()).addListenerForSingleValueEvent(
             new ValueEventListener() {
               @Override
               public void onDataChange(DataSnapshot dataSnapshot) {
-                title.setText(title.getText() + "on data called");
                 user_rooms = new HashMap<String,String>();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                   user_rooms.put((String) snapshot.getValue(), snapshot.getKey());
