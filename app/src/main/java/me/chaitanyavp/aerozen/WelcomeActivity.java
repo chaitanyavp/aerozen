@@ -111,9 +111,11 @@ public class WelcomeActivity extends AppCompatActivity {
   }
 
   private void goToRoom(String roomKey){
-    //TODO
     Log.w("gotoroom", "going to "+roomKey);
-    title.setText("going to "+roomKey);
+    title.setText("Going to "+roomKey);
+    Intent intent = new Intent(this, RoomActivity.class);
+    intent.putExtra("room_id", roomKey);
+    startActivity(intent);
   }
 
   private void updateUI() {
@@ -165,8 +167,17 @@ public class WelcomeActivity extends AppCompatActivity {
               }
               @Override
               public void onCancelled(DatabaseError error) {
+
               }
             });
+
+        Button my_room_button = findViewById(R.id.my_room_button);
+        my_room_button.setOnClickListener(new OnClickListener() {
+          @Override
+          public void onClick(View view) {
+            goToRoom(user.getUid());
+          }
+        });
       } else {
         // response.getError().getErrorCode() and handle the error.
         System.out.println("bad user" + response);

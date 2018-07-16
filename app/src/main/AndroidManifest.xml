@@ -32,6 +32,15 @@
         android:name="android.support.PARENT_ACTIVITY"
         android:value="me.chaitanyavp.aerozen.WelcomeActivity" />
     </activity>
+    <activity
+      android:label="@string/title_activity_room"
+      android:name=".RoomActivity"
+      android:parentActivityName=".WelcomeActivity"
+      android:theme="@style/AppTheme.NoActionBar">
+      <meta-data
+        android:name="android.support.PARENT_ACTIVITY"
+        android:value="me.chaitanyavp.aerozen.WelcomeActivity" />
+    </activity>
   </application>
 
 </manifest>
