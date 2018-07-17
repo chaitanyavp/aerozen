@@ -27,6 +27,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.LinkedList;
+
 public class RoomActivity extends AppCompatActivity {
 
   /**
@@ -38,6 +40,7 @@ public class RoomActivity extends AppCompatActivity {
    * {@link android.support.v4.app.FragmentStatePagerAdapter}.
    */
   private SectionsPagerAdapter mSectionsPagerAdapter;
+  private LinkedList<String> boardList;
 
   /**
    * The {@link ViewPager} that will host the section contents.
@@ -74,10 +77,17 @@ public class RoomActivity extends AppCompatActivity {
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     database = FirebaseDatabase.getInstance();
+    boardList = new LinkedList<String>();
 
     database.getReference(roomID).addChildEventListener(new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+          if (s == null){
+            boardList.addFirst(dataSnapshot.getKey());
+          }
+          else{
+            boardList.add(boardList.indexOf(s) + 1, dataSnapshot.getKey());
+          }
 
         }
 
@@ -112,7 +122,7 @@ public class RoomActivity extends AppCompatActivity {
   }
 
   private void updateBoard(){
-      
+
   }
 
 
