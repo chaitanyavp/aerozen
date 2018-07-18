@@ -27,6 +27,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class RoomActivity extends AppCompatActivity {
@@ -40,7 +41,7 @@ public class RoomActivity extends AppCompatActivity {
    * {@link android.support.v4.app.FragmentStatePagerAdapter}.
    */
   private SectionsPagerAdapter mSectionsPagerAdapter;
-  private LinkedList<String> boardList;
+  private ArrayList<String> boardList;
 
   /**
    * The {@link ViewPager} that will host the section contents.
@@ -48,6 +49,7 @@ public class RoomActivity extends AppCompatActivity {
   private ViewPager mViewPager;
   private FirebaseDatabase database;
   private String roomID;
+  private TextView t;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -76,34 +78,32 @@ public class RoomActivity extends AppCompatActivity {
 
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
-    database = FirebaseDatabase.getInstance();
-    boardList = new LinkedList<String>();
 
-    database.getReference(roomID).addChildEventListener(new ChildEventListener() {
+    t = findViewById(R.id.test);
+    t.setText("Started" + roomID);
+
+    database = FirebaseDatabase.getInstance();
+    boardList = new ArrayList<String>();
+
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID).addChildEventListener(new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          if (s == null){
-            boardList.addFirst(dataSnapshot.getKey());
-          }
-          else{
-            boardList.add(boardList.indexOf(s) + 1, dataSnapshot.getKey());
-          }
-
+          addBoard(dataSnapshot.getKey(), s);
         }
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+          updateBoard(dataSnapshot.getKey());
         }
 
         @Override
         public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
+          removeBoard(dataSnapshot.getKey());
         }
 
         @Override
         public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+          moveBoard(dataSnapshot.getKey(), s);
         }
 
         @Override
@@ -113,16 +113,38 @@ public class RoomActivity extends AppCompatActivity {
     });
   }
 
-  private void addBoard(){
-
+  private void addBoard(String key, String prev){
+    if (prev == null){
+      boardList.add(0, key);
+    }
+    else{
+      boardList.add( boardList.indexOf(prev)+1, key);
+    }
+    t.setText(t.getText()+ "added"+key);
+    mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
-  private void removeBoard(){
-
+  private void removeBoard(String key){
+    boardList.remove(key);
+    t.setText(t.getText() + "Removed"+key);
+    mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
-  private void updateBoard(){
+  private void moveBoard(String key, String prev){
+    boardList.remove(key);
+    if (prev == null){
+      boardList.add(0, key);
+    }
+    else{
+      boardList.add(boardList.indexOf(prev) + 1, key);
+    }
+    t.setText(t.getText() + "moved"+key);
+    mSectionsPagerAdapter.notifyDataSetChanged();
+  }
 
+  private void updateBoard(String key){
+    t.setText(t.getText() + "updated"+key);
+    mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
 
@@ -191,29 +213,24 @@ public class RoomActivity extends AppCompatActivity {
    */
   public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
-    private int pageCount;
-
     public SectionsPagerAdapter(FragmentManager fm) {
       super(fm);
-      pageCount = 0;
+
     }
 
     @Override
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position + 1);
+      return PlaceholderFragment.newInstance(position);
     }
 
     @Override
     public int getCount() {
-      // Show 3 total pages.
-      return 3;
+      if(boardList == null) {
+        return 0;
+      }
+      return boardList.size();
     }
-
-    public void setCount(int pageCount){
-      this.pageCount = pageCount;
-    }
-
   }
 }
