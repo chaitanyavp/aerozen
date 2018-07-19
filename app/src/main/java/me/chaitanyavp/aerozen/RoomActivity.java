@@ -7,6 +7,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
@@ -26,6 +27,8 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -147,6 +150,22 @@ public class RoomActivity extends AppCompatActivity {
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
+  public View createCard(View parent, String text){
+      CardView newCard = new CardView(this);
+//      newCard.setOnClickListener(new OnClickListener() {
+//          @Override
+//          public void onClick(View view) {
+//              goToRoom(room_id);
+//          }
+//      });
+      TextView textView = new TextView(this);
+      textView.setText(text);
+      newCard.addView(textView);
+      parent.add
+      ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) newCard.getLayoutParams();
+      params.width = 200; params.leftMargin = 100; params.topMargin = 200;
+      return newCard;
+  }
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
