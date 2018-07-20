@@ -1,5 +1,6 @@
 package me.chaitanyavp.aerozen;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.firebase.database.ChildEventListener;
@@ -150,23 +152,6 @@ public class RoomActivity extends AppCompatActivity {
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
-  public View createCard(View parent, String text){
-      CardView newCard = new CardView(this);
-//      newCard.setOnClickListener(new OnClickListener() {
-//          @Override
-//          public void onClick(View view) {
-//              goToRoom(room_id);
-//          }
-//      });
-      TextView textView = new TextView(this);
-      textView.setText(text);
-      newCard.addView(textView);
-      parent.add
-      ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) newCard.getLayoutParams();
-      params.width = 200; params.leftMargin = 100; params.topMargin = 200;
-      return newCard;
-  }
-
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     // Inflate the menu; this adds items to the action bar if it is present.
@@ -216,6 +201,23 @@ public class RoomActivity extends AppCompatActivity {
       return fragment;
     }
 
+    public static CardView addCard(LinearLayout parent, String text, Context context){
+      CardView newCard = new CardView(context);
+//      newCard.setOnClickListener(new OnClickListener() {
+//          @Override
+//          public void onClick(View view) {
+//              goToRoom(room_id);
+//          }
+//      });
+      TextView textView = new TextView(context);
+      textView.setText(text);
+      newCard.addView(textView);
+      parent.addView(newCard);
+      ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) newCard.getLayoutParams();
+      params.width = 200; params.leftMargin = 100; params.topMargin = 200;
+      return newCard;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
@@ -223,9 +225,10 @@ public class RoomActivity extends AppCompatActivity {
       TextView textView = (TextView) rootView.findViewById(R.id.section_label);
       textView
           .setText(getArguments().getStringArrayList("boardList").get(getArguments().getInt(ARG_SECTION_NUMBER)));
+      TextView view = new TextView(rootView.getContext());
+
       return rootView;
     }
-
 //    public View onCreateView(LayoutInflater inflater, ViewGroup container, ArrayList<String>){
 //
 //    }
