@@ -33,6 +33,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class RoomActivity extends AppCompatActivity {
@@ -47,6 +48,7 @@ public class RoomActivity extends AppCompatActivity {
    */
   private SectionsPagerAdapter mSectionsPagerAdapter;
   private ArrayList<String> boardList;
+  private HashMap<String, ChildEventListener> boardChildListeners;
 
   /**
    * The {@link ViewPager} that will host the section contents.
@@ -89,6 +91,7 @@ public class RoomActivity extends AppCompatActivity {
 
     database = FirebaseDatabase.getInstance();
     boardList = new ArrayList<String>();
+    boardChildListeners = new HashMap<String, ChildEventListener>();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID).addChildEventListener(new ChildEventListener() {
         @Override
@@ -126,11 +129,41 @@ public class RoomActivity extends AppCompatActivity {
       boardList.add( boardList.indexOf(prev)+1, key);
     }
     t.setText(t.getText()+ "added"+key);
+    ChildEventListener boardEventListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            addBoard(dataSnapshot.getKey(), s);
+        }
+
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            updateBoard(dataSnapshot.getKey());
+        }
+
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            removeBoard(dataSnapshot.getKey());
+        }
+
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            moveBoard(dataSnapshot.getKey(), s);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+    boardChildListeners.put(key, boardEventListener);
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key).addChildEventListener(boardEventListener);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
   private void removeBoard(String key){
     boardList.remove(key);
+    ChildEventListener childEventListener = boardChildListeners.remove(key);
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key).removeEventListener(childEventListener);
     t.setText(t.getText() + "Removed"+key);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
@@ -184,6 +217,7 @@ public class RoomActivity extends AppCompatActivity {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private static FirebaseDatabase databaseRef;
 
     public PlaceholderFragment() {
     }
@@ -192,9 +226,10 @@ public class RoomActivity extends AppCompatActivity {
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards) {
+    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards, FirebaseDatabase databaseToUse) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
+      databaseRef = databaseToUse;
       args.putInt(ARG_SECTION_NUMBER, sectionNumber);
       args.putStringArrayList("boardList", boards);
       fragment.setArguments(args);
@@ -229,6 +264,11 @@ public class RoomActivity extends AppCompatActivity {
 
       return rootView;
     }
+
+//    @Override
+//    public View onDestroyView(){
+//
+//    }
 //    public View onCreateView(LayoutInflater inflater, ViewGroup container, ArrayList<String>){
 //
 //    }
@@ -249,7 +289,7 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position, boardList);
+      return PlaceholderFragment.newInstance(position, boardList, database);
     }
 
     @Override
