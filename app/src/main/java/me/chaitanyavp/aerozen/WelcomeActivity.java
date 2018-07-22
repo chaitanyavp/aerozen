@@ -70,11 +70,13 @@ public class WelcomeActivity extends AppCompatActivity {
   private LinearLayout roomLayout;
   private TextView title;
 
+  private static final String TAG = "WelcomeActivity";
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_welcome);
-    Log.w("", "STARTING");
+    System.out.println("STARTING");
     title = findViewById(R.id.title_text);
     roomLayout = findViewById(R.id.roomlist);
 //    FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -111,7 +113,7 @@ public class WelcomeActivity extends AppCompatActivity {
   }
 
   private void goToRoom(String roomKey){
-    Log.w("gotoroom", "going to "+roomKey);
+    Log.w(TAG, "going to "+roomKey);
     title.setText("Going to "+roomKey);
     Intent intent = new Intent(this, RoomActivity.class);
     intent.putExtra("room_id", roomKey);
@@ -142,6 +144,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    System.out.println("onActivityResult");
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == RC_SIGN_IN) {

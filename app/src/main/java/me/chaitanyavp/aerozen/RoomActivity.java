@@ -2,6 +2,7 @@ package me.chaitanyavp.aerozen;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -16,6 +17,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,6 +52,7 @@ public class RoomActivity extends AppCompatActivity {
   private SectionsPagerAdapter mSectionsPagerAdapter;
   private ArrayList<String> boardList;
   private HashMap<String, ChildEventListener> boardChildListeners;
+  private HashMap<String, ArrayList<String>> boardTaskList;
 
   /**
    * The {@link ViewPager} that will host the section contents.
@@ -74,6 +78,8 @@ public class RoomActivity extends AppCompatActivity {
     mViewPager = (ViewPager) findViewById(R.id.container);
     mViewPager.setAdapter(mSectionsPagerAdapter);
 
+    Log.w("BAD", "we have began");
+
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -92,6 +98,7 @@ public class RoomActivity extends AppCompatActivity {
     database = FirebaseDatabase.getInstance();
     boardList = new ArrayList<String>();
     boardChildListeners = new HashMap<String, ChildEventListener>();
+    boardTaskList = new HashMap<String, ArrayList<String>>();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID).addChildEventListener(new ChildEventListener() {
         @Override
@@ -119,9 +126,10 @@ public class RoomActivity extends AppCompatActivity {
 
         }
     });
+    Log.w("BAD", "on child finished");
   }
 
-  private void addBoard(String key, String prev){
+  private void addBoard(final String key, String prev){
     if (prev == null){
       boardList.add(0, key);
     }
@@ -129,25 +137,48 @@ public class RoomActivity extends AppCompatActivity {
       boardList.add( boardList.indexOf(prev)+1, key);
     }
     t.setText(t.getText()+ "added"+key);
+    boardTaskList.put(key, new ArrayList<String>());
     ChildEventListener boardEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            addBoard(dataSnapshot.getKey(), s);
+          ArrayList<String> tasks = boardTaskList.get(key);
+          tasks.add(tasks.indexOf(s)+1, (String) dataSnapshot.getValue());
+          Log.w("BAD", "task child added");
+          t.setText(t.getText() + " task child added");
+          mSectionsPagerAdapter.updateTasks(boardTaskList);
+          mSectionsPagerAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            updateBoard(dataSnapshot.getKey());
+          ArrayList<String> tasks = boardTaskList.get(key);
+          tasks.remove(tasks.indexOf(s)+1);
+          tasks.add(tasks.indexOf(s)+1, (String) dataSnapshot.getValue());
+          t.setText(t.getText() + " task child changed");
+          mSectionsPagerAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-            removeBoard(dataSnapshot.getKey());
+          ArrayList<String> tasks = boardTaskList.get(key);
+          tasks.remove((String) dataSnapshot.getValue());
+          t.setText(t.getText() + " task child removed");
+          mSectionsPagerAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            moveBoard(dataSnapshot.getKey(), s);
+          ArrayList<String> tasks = boardTaskList.get(key);
+          String value = (String) dataSnapshot.getValue();
+          tasks.remove(value);
+          if (s == null){
+            tasks.add(0, key);
+          }
+          else{
+            tasks.add(tasks.indexOf(s) + 1, key);
+          }
+          t.setText(t.getText() + " task child moved");
+          mSectionsPagerAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -156,15 +187,17 @@ public class RoomActivity extends AppCompatActivity {
         }
     };
     boardChildListeners.put(key, boardEventListener);
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key).addChildEventListener(boardEventListener);
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key+"/tasks").addChildEventListener(boardEventListener);
+    mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
   private void removeBoard(String key){
     boardList.remove(key);
     ChildEventListener childEventListener = boardChildListeners.remove(key);
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key).removeEventListener(childEventListener);
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key+"/tasks").removeEventListener(childEventListener);
     t.setText(t.getText() + "Removed"+key);
+    mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
@@ -177,11 +210,13 @@ public class RoomActivity extends AppCompatActivity {
       boardList.add(boardList.indexOf(prev) + 1, key);
     }
     t.setText(t.getText() + "moved"+key);
+    mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
   private void updateBoard(String key){
     t.setText(t.getText() + "updated"+key);
+    mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
@@ -217,7 +252,7 @@ public class RoomActivity extends AppCompatActivity {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private static FirebaseDatabase databaseRef;
+    private static HashMap<String, ArrayList<String>> taskMapList;
 
     public PlaceholderFragment() {
     }
@@ -226,14 +261,18 @@ public class RoomActivity extends AppCompatActivity {
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards, FirebaseDatabase databaseToUse) {
+    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards, HashMap<String, ArrayList<String>> initialTaskMapList) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
-      databaseRef = databaseToUse;
+      taskMapList = initialTaskMapList;
       args.putInt(ARG_SECTION_NUMBER, sectionNumber);
       args.putStringArrayList("boardList", boards);
       fragment.setArguments(args);
       return fragment;
+    }
+
+    public static void updateTaskMapList(HashMap<String, ArrayList<String>> newTaskMapList){
+      taskMapList = newTaskMapList;
     }
 
     public static CardView addCard(LinearLayout parent, String text, Context context){
@@ -248,8 +287,32 @@ public class RoomActivity extends AppCompatActivity {
       textView.setText(text);
       newCard.addView(textView);
       parent.addView(newCard);
-      ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) newCard.getLayoutParams();
-      params.width = 200; params.leftMargin = 100; params.topMargin = 200;
+
+      LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+          LinearLayout.LayoutParams.MATCH_PARENT,
+          LinearLayout.LayoutParams.WRAP_CONTENT
+      );
+      Resources r = context.getResources();
+      int tendp = (int) TypedValue.applyDimension(
+          TypedValue.COMPLEX_UNIT_DIP,
+          10,
+          r.getDisplayMetrics()
+      );
+      params.setMargins(tendp, tendp, tendp, 0);
+      newCard.setLayoutParams(params);
+
+      CardView.LayoutParams cardParams = new CardView.LayoutParams(
+          CardView.LayoutParams.WRAP_CONTENT,
+          CardView.LayoutParams.WRAP_CONTENT
+      );
+      int sixteendp = (int) TypedValue.applyDimension(
+          TypedValue.COMPLEX_UNIT_DIP,
+          16,
+          r.getDisplayMetrics()
+      );
+      cardParams.setMargins(sixteendp, sixteendp, sixteendp, sixteendp);
+      textView.setLayoutParams(cardParams);
+
       return newCard;
     }
 
@@ -257,10 +320,17 @@ public class RoomActivity extends AppCompatActivity {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
       View rootView = inflater.inflate(R.layout.fragment_room, container, false);
+      Context context = rootView.getContext();
+      int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
+      String boardName = getArguments().getStringArrayList("boardList").get(sectionNumber);
+
       TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-      textView
-          .setText(getArguments().getStringArrayList("boardList").get(getArguments().getInt(ARG_SECTION_NUMBER)));
-      TextView view = new TextView(rootView.getContext());
+      textView.setText(boardName);
+      LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+
+      for(String task : taskMapList.get(boardName)){
+        addCard(parentLayout, task, context);
+      }
 
       return rootView;
     }
@@ -289,7 +359,9 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position, boardList, database);
+      t.setText(t.getText()+ " GET_ITEM_HAS_BEEN_CALLED");
+      return PlaceholderFragment.newInstance(position, boardList, boardTaskList);
+
     }
 
     @Override
@@ -298,6 +370,11 @@ public class RoomActivity extends AppCompatActivity {
         return 0;
       }
       return boardList.size();
+    }
+
+    public void updateTasks(HashMap<String, ArrayList<String>> newTaskList){
+      PlaceholderFragment.updateTaskMapList(newTaskList);
+      this.notifyDataSetChanged();
     }
   }
 }
