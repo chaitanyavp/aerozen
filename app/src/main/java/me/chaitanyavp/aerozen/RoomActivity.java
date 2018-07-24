@@ -1,5 +1,6 @@
 package me.chaitanyavp.aerozen;
 
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -146,7 +147,6 @@ public class RoomActivity extends AppCompatActivity {
           Log.w("BAD", "task child added");
           t.setText(t.getText() + " task child added");
           mSectionsPagerAdapter.updateTasks(boardTaskList);
-          mSectionsPagerAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -275,6 +275,12 @@ public class RoomActivity extends AppCompatActivity {
       taskMapList = newTaskMapList;
     }
 
+//    public static void updateTaskList(String key){
+//        for (String task : taskMapList.get(key)){
+//            addCard()
+//        }
+//    }
+
     public static CardView addCard(LinearLayout parent, String text, Context context){
       CardView newCard = new CardView(context);
 //      newCard.setOnClickListener(new OnClickListener() {
@@ -354,7 +360,10 @@ public class RoomActivity extends AppCompatActivity {
       super(fm);
 
     }
-
+    @Override
+    public int getItemPosition(Object object) {
+        return POSITION_NONE;
+    }
     @Override
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
@@ -375,6 +384,16 @@ public class RoomActivity extends AppCompatActivity {
     public void updateTasks(HashMap<String, ArrayList<String>> newTaskList){
       PlaceholderFragment.updateTaskMapList(newTaskList);
       this.notifyDataSetChanged();
+//      FragmentTransaction tr = getFragmentManager().beginTransaction();
+//      tr.replace(R.id.container, PlaceholderFragment.this);
+//      tr.commit();
+//        Fragment currentFragment = this.getActivity().getFragmentManager().findFragmentById(R.id.container);
+//        if (currentFragment instanceof PlaceholderFragment) {
+//            FragmentTransaction fragTransaction =   (getActivity()).getFragmentManager().beginTransaction();
+//            fragTransaction.detach(currentFragment);
+//            fragTransaction.attach(currentFragment);
+//            fragTransaction.commit();}
+//        }
     }
   }
 }
