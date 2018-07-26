@@ -242,6 +242,12 @@ public class RoomActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
+  private void createTask(String task){
+      int position = mViewPager.getCurrentItem();
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
+              +roomID+"_"+boardList.get(position)).child(task).setValue(task);
+  }
+
   /**
    * A placeholder fragment containing a simple view.
    */
