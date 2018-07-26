@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +24,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -81,16 +83,44 @@ public class RoomActivity extends AppCompatActivity {
 
     Log.w("BAD", "we have began");
 
-    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-    fab.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-            .setAction("Action", null).show();
-      }
-    });
+//    com.github.clans.fab.FloatingActionMenu fam = (com.github.clans.fab.FloatingActionMenu) findViewById(R.id.fab_main);
+//    fam.setOnClickListener(new View.OnClickListener() {
+//      @Override
+//      public void onClick(View view) {
+//        Snackbar.make(view, "Replace with your own action bt main", Snackbar.LENGTH_LONG)
+//            .setAction("Action", null).show();
+//      }
+//    });
 
-    Intent intent = getIntent();
+      FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
+      fab1.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View view) {
+              Snackbar.make(view, "Replace with your own action bt1", Snackbar.LENGTH_LONG)
+                      .setAction("Action", null).show();
+          }
+      });
+
+      FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
+      fab2.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View view) {
+              Snackbar.make(view, "Replace with your own action bt2", Snackbar.LENGTH_LONG)
+                      .setAction("Action", null).show();
+          }
+      });
+
+      FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
+      fab3.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View view) {
+              Snackbar.make(view, "Replace with your own action bt3", Snackbar.LENGTH_LONG)
+                      .setAction("Action", null).show();
+          }
+      });
+
+
+      Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
 
     t = findViewById(R.id.test);
