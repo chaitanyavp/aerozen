@@ -1,7 +1,9 @@
 package me.chaitanyavp.aerozen;
 
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
@@ -17,6 +19,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -28,7 +31,9 @@ import android.view.ViewGroup;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.google.firebase.database.ChildEventListener;
@@ -110,10 +115,35 @@ public class RoomActivity extends AppCompatActivity {
           }
       });
 
+      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setTitle("Title");
+      final LinearLayout alertLayout = new LinearLayout(this);
+      final EditText input = new EditText(this);
+      input.setInputType(InputType.TYPE_CLASS_TEXT);
+      final SeekBar priority = new SeekBar(this);
+      alertLayout.addView(input);
+      alertLayout.addView(priority);
+      builder.setView(alertLayout);
+      final AlertDialog dialog = builder.create();
+
+      builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+//                  m_Text = input.getText().toString();
+          }
+      });
+      builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+              dialog.cancel();
+          }
+      });
+
       FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
       fab3.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View view) {
+              dialog.show();
               Snackbar.make(view, "Replace with your own action bt3", Snackbar.LENGTH_LONG)
                       .setAction("Action", null).show();
           }
