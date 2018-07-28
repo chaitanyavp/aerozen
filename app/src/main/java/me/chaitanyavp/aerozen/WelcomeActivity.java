@@ -117,6 +117,7 @@ public class WelcomeActivity extends AppCompatActivity {
     title.setText("Going to "+roomKey);
     Intent intent = new Intent(this, RoomActivity.class);
     intent.putExtra("room_id", roomKey);
+    intent.putExtra("user_id", user.getUid());
     startActivity(intent);
   }
 

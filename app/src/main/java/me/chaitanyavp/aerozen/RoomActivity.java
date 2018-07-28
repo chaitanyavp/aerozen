@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -68,6 +69,7 @@ public class RoomActivity extends AppCompatActivity {
   private ViewPager mViewPager;
   private FirebaseDatabase database;
   private String roomID;
+  private String userID;
   private TextView t;
 
   @Override
@@ -88,70 +90,73 @@ public class RoomActivity extends AppCompatActivity {
 
     Log.w("BAD", "we have began");
 
-//    com.github.clans.fab.FloatingActionMenu fam = (com.github.clans.fab.FloatingActionMenu) findViewById(R.id.fab_main);
-//    fam.setOnClickListener(new View.OnClickListener() {
-//      @Override
-//      public void onClick(View view) {
-//        Snackbar.make(view, "Replace with your own action bt main", Snackbar.LENGTH_LONG)
-//            .setAction("Action", null).show();
-//      }
-//    });
+    FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
+    fab1.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        Snackbar.make(view, "Replace with your own action bt1", Snackbar.LENGTH_LONG)
+            .setAction("Action", null).show();
+      }
+    });
 
-      FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
-      fab1.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              Snackbar.make(view, "Replace with your own action bt1", Snackbar.LENGTH_LONG)
-                      .setAction("Action", null).show();
-          }
-      });
+    FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
+    fab2.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        Snackbar.make(view, "Replace with your own action bt2", Snackbar.LENGTH_LONG)
+            .setAction("Action", null).show();
+      }
+    });
 
-      FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
-      fab2.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              Snackbar.make(view, "Replace with your own action bt2", Snackbar.LENGTH_LONG)
-                      .setAction("Action", null).show();
-          }
-      });
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Add task");
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    int tendp = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
+    alertLayoutParams.setMargins(tendp, tendp, tendp, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
 
-      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-      builder.setTitle("Title");
-      final LinearLayout alertLayout = new LinearLayout(this);
-      final EditText input = new EditText(this);
-      input.setInputType(InputType.TYPE_CLASS_TEXT);
-      final SeekBar priority = new SeekBar(this);
-      alertLayout.addView(input);
-      alertLayout.addView(priority);
-      builder.setView(alertLayout);
-      final AlertDialog dialog = builder.create();
+    final EditText taskInput = new EditText(this);
+    taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
+    final SeekBar priority = new SeekBar(this);
+    alertLayout.addView(taskInput);
+    alertLayout.addView(priority);
+    builder.setView(alertLayout);
 
-      builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-//                  m_Text = input.getText().toString();
-          }
-      });
-      builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-              dialog.cancel();
-          }
-      });
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        createTask(taskInput.getText().toString());
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    final AlertDialog dialog = builder.create();
 
-      FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
-      fab3.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              dialog.show();
-              Snackbar.make(view, "Replace with your own action bt3", Snackbar.LENGTH_LONG)
-                      .setAction("Action", null).show();
-          }
-      });
+    FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
+    fab3.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        dialog.show();
+        Snackbar.make(view, "Replace with your own action bt3", Snackbar.LENGTH_LONG)
+            .setAction("Action", null).show();
+      }
+    });
 
-
-      Intent intent = getIntent();
+    Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
+    userID = intent.getStringExtra("user_id");
 
     t = findViewById(R.id.test);
     t.setText("Started" + roomID);
@@ -161,121 +166,123 @@ public class RoomActivity extends AppCompatActivity {
     boardChildListeners = new HashMap<String, ChildEventListener>();
     boardTaskList = new HashMap<String, ArrayList<String>>();
 
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID).addChildEventListener(new ChildEventListener() {
-        @Override
-        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          addBoard(dataSnapshot.getKey(), s);
-        }
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
+        .addChildEventListener(new ChildEventListener() {
+          @Override
+          public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            addBoard(dataSnapshot.getKey(), s);
+          }
 
-        @Override
-        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          updateBoard(dataSnapshot.getKey());
-        }
+          @Override
+          public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            updateBoard(dataSnapshot.getKey());
+          }
 
-        @Override
-        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-          removeBoard(dataSnapshot.getKey());
-        }
+          @Override
+          public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            removeBoard(dataSnapshot.getKey());
+          }
 
-        @Override
-        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          moveBoard(dataSnapshot.getKey(), s);
-        }
+          @Override
+          public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            moveBoard(dataSnapshot.getKey(), s);
+          }
 
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
+          @Override
+          public void onCancelled(@NonNull DatabaseError databaseError) {
 
-        }
-    });
+          }
+        });
     Log.w("BAD", "on child finished");
   }
 
-  private void addBoard(final String key, String prev){
-    if (prev == null){
+  private void addBoard(final String key, String prev) {
+    if (prev == null) {
       boardList.add(0, key);
-    }
-    else{
-      boardList.add( boardList.indexOf(prev)+1, key);
-    }
-    t.setText(t.getText()+ "added"+key);
-    boardTaskList.put(key, new ArrayList<String>());
-    ChildEventListener boardEventListener = new ChildEventListener() {
-        @Override
-        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          ArrayList<String> tasks = boardTaskList.get(key);
-          tasks.add(tasks.indexOf(s)+1, (String) dataSnapshot.getValue());
-          Log.w("BAD", "task child added");
-          t.setText(t.getText() + " task child added");
-          mSectionsPagerAdapter.updateTasks(boardTaskList);
-        }
-
-        @Override
-        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          ArrayList<String> tasks = boardTaskList.get(key);
-          tasks.remove(tasks.indexOf(s)+1);
-          tasks.add(tasks.indexOf(s)+1, (String) dataSnapshot.getValue());
-          t.setText(t.getText() + " task child changed");
-          mSectionsPagerAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-          ArrayList<String> tasks = boardTaskList.get(key);
-          tasks.remove((String) dataSnapshot.getValue());
-          t.setText(t.getText() + " task child removed");
-          mSectionsPagerAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          ArrayList<String> tasks = boardTaskList.get(key);
-          String value = (String) dataSnapshot.getValue();
-          tasks.remove(value);
-          if (s == null){
-            tasks.add(0, key);
-          }
-          else{
-            tasks.add(tasks.indexOf(s) + 1, key);
-          }
-          t.setText(t.getText() + " task child moved");
-          mSectionsPagerAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-        }
-    };
-    boardChildListeners.put(key, boardEventListener);
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key+"/tasks").addChildEventListener(boardEventListener);
-    mSectionsPagerAdapter.updateTasks(boardTaskList);
-    mSectionsPagerAdapter.notifyDataSetChanged();
-  }
-
-  private void removeBoard(String key){
-    boardList.remove(key);
-    ChildEventListener childEventListener = boardChildListeners.remove(key);
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"+roomID+"_"+key+"/tasks").removeEventListener(childEventListener);
-    t.setText(t.getText() + "Removed"+key);
-    mSectionsPagerAdapter.updateTasks(boardTaskList);
-    mSectionsPagerAdapter.notifyDataSetChanged();
-  }
-
-  private void moveBoard(String key, String prev){
-    boardList.remove(key);
-    if (prev == null){
-      boardList.add(0, key);
-    }
-    else{
+    } else {
       boardList.add(boardList.indexOf(prev) + 1, key);
     }
-    t.setText(t.getText() + "moved"+key);
+    t.setText(t.getText() + "added" + key);
+    boardTaskList.put(key, new ArrayList<String>());
+    ChildEventListener boardEventListener = new ChildEventListener() {
+      @Override
+      public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+        ArrayList<String> tasks = boardTaskList.get(key);
+        tasks.add(tasks.indexOf(s) + 1, (String) dataSnapshot.getValue());
+        Log.w("BAD", "task child added");
+        t.setText(t.getText() + " task child added");
+        mSectionsPagerAdapter.updateTasks(boardTaskList);
+      }
+
+      @Override
+      public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+        ArrayList<String> tasks = boardTaskList.get(key);
+        tasks.remove(tasks.indexOf(s) + 1);
+        tasks.add(tasks.indexOf(s) + 1, (String) dataSnapshot.getValue());
+        t.setText(t.getText() + " task child changed");
+        mSectionsPagerAdapter.notifyDataSetChanged();
+      }
+
+      @Override
+      public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+        ArrayList<String> tasks = boardTaskList.get(key);
+        tasks.remove((String) dataSnapshot.getValue());
+        t.setText(t.getText() + " task child removed");
+        mSectionsPagerAdapter.notifyDataSetChanged();
+      }
+
+      @Override
+      public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+        ArrayList<String> tasks = boardTaskList.get(key);
+        String value = (String) dataSnapshot.getValue();
+        tasks.remove(value);
+        if (s == null) {
+          tasks.add(0, key);
+        } else {
+          tasks.add(tasks.indexOf(s) + 1, key);
+        }
+        t.setText(t.getText() + " task child moved");
+        mSectionsPagerAdapter.notifyDataSetChanged();
+      }
+
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+
+      }
+    };
+    boardChildListeners.put(key, boardEventListener);
+    database.getReferenceFromUrl(
+        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + key + "/tasks")
+        .addChildEventListener(boardEventListener);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
-  private void updateBoard(String key){
-    t.setText(t.getText() + "updated"+key);
+  private void removeBoard(String key) {
+    boardList.remove(key);
+    ChildEventListener childEventListener = boardChildListeners.remove(key);
+    database.getReferenceFromUrl(
+        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + key + "/tasks")
+        .removeEventListener(childEventListener);
+    t.setText(t.getText() + "Removed" + key);
+    mSectionsPagerAdapter.updateTasks(boardTaskList);
+    mSectionsPagerAdapter.notifyDataSetChanged();
+  }
+
+  private void moveBoard(String key, String prev) {
+    boardList.remove(key);
+    if (prev == null) {
+      boardList.add(0, key);
+    } else {
+      boardList.add(boardList.indexOf(prev) + 1, key);
+    }
+    t.setText(t.getText() + "moved" + key);
+    mSectionsPagerAdapter.updateTasks(boardTaskList);
+    mSectionsPagerAdapter.notifyDataSetChanged();
+  }
+
+  private void updateBoard(String key) {
+    t.setText(t.getText() + "updated" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
@@ -302,10 +309,11 @@ public class RoomActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-  private void createTask(String task){
-      int position = mViewPager.getCurrentItem();
-      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-              +roomID+"_"+boardList.get(position)).child(task).setValue(task);
+  private void createTask(String task) {
+    int position = mViewPager.getCurrentItem();
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
+        + roomID + "_" + boardList.get(position)+"/tasks/").child(userID + System.currentTimeMillis())
+        .setValue(task);
   }
 
   /**
@@ -327,7 +335,8 @@ public class RoomActivity extends AppCompatActivity {
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards, HashMap<String, ArrayList<String>> initialTaskMapList) {
+    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards,
+        HashMap<String, ArrayList<String>> initialTaskMapList) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
       taskMapList = initialTaskMapList;
@@ -337,7 +346,7 @@ public class RoomActivity extends AppCompatActivity {
       return fragment;
     }
 
-    public static void updateTaskMapList(HashMap<String, ArrayList<String>> newTaskMapList){
+    public static void updateTaskMapList(HashMap<String, ArrayList<String>> newTaskMapList) {
       taskMapList = newTaskMapList;
     }
 
@@ -347,7 +356,7 @@ public class RoomActivity extends AppCompatActivity {
 //        }
 //    }
 
-    public static CardView addCard(LinearLayout parent, String text, Context context){
+    public static CardView addCard(LinearLayout parent, String text, Context context) {
       CardView newCard = new CardView(context);
 //      newCard.setOnClickListener(new OnClickListener() {
 //          @Override
@@ -400,7 +409,7 @@ public class RoomActivity extends AppCompatActivity {
       textView.setText(boardName);
       LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
-      for(String task : taskMapList.get(boardName)){
+      for (String task : taskMapList.get(boardName)) {
         addCard(parentLayout, task, context);
       }
 
@@ -426,28 +435,30 @@ public class RoomActivity extends AppCompatActivity {
       super(fm);
 
     }
+
     @Override
     public int getItemPosition(Object object) {
-        return POSITION_NONE;
+      return POSITION_NONE;
     }
+
     @Override
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      t.setText(t.getText()+ " GET_ITEM_HAS_BEEN_CALLED");
+      t.setText(t.getText() + " GET_ITEM_HAS_BEEN_CALLED");
       return PlaceholderFragment.newInstance(position, boardList, boardTaskList);
 
     }
 
     @Override
     public int getCount() {
-      if(boardList == null) {
+      if (boardList == null) {
         return 0;
       }
       return boardList.size();
     }
 
-    public void updateTasks(HashMap<String, ArrayList<String>> newTaskList){
+    public void updateTasks(HashMap<String, ArrayList<String>> newTaskList) {
       PlaceholderFragment.updateTaskMapList(newTaskList);
       this.notifyDataSetChanged();
 //      FragmentTransaction tr = getFragmentManager().beginTransaction();
