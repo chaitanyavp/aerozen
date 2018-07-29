@@ -29,6 +29,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
@@ -122,11 +125,43 @@ public class RoomActivity extends AppCompatActivity {
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     alertLayout.setOrientation(LinearLayout.VERTICAL);
     alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(tendp, tendp, tendp, tendp);
+
+    final LinearLayout dueDateLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+//    dueDateLayoutParams.setMargins(tendp, tendp, tendp, 0);
+    dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
+    dueDateLayout.setLayoutParams(dueDateLayoutParams);
+
+    final DatePicker datePicker = new DatePicker(this);
+    datePicker.setVisibility(View.GONE);
+    CheckBox dueDateCheckBox = new CheckBox(this);
+    dueDateCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+       @Override
+       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+          datePicker.setEnabled(isChecked);
+          if(isChecked){
+            datePicker.setVisibility(View.VISIBLE);
+          }
+          else{
+            datePicker.setVisibility(View.GONE);
+          }
+       }
+     }
+    );
+    TextView dueDateLabel = new TextView(this);
+    dueDateLabel.setText(" Due Date");
+    dueDateLayout.addView(dueDateCheckBox);
+    dueDateLayout.addView(dueDateLabel);
 
     final EditText taskInput = new EditText(this);
     taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
     final SeekBar priority = new SeekBar(this);
     alertLayout.addView(taskInput);
+    alertLayout.addView(dueDateLayout);
+    alertLayout.addView(datePicker);
     alertLayout.addView(priority);
     builder.setView(alertLayout);
 
@@ -312,8 +347,53 @@ public class RoomActivity extends AppCompatActivity {
   private void createTask(String task) {
     int position = mViewPager.getCurrentItem();
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-        + roomID + "_" + boardList.get(position)+"/tasks/").child(userID + System.currentTimeMillis())
+        + roomID + "_" + boardList.get(position) + "/tasks/")
+        .child(userID + System.currentTimeMillis())
         .setValue(task);
+  }
+
+  private AlertDialog createTaskDialog(Task task) {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Update Task");
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    int tendp = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
+    alertLayoutParams.setMargins(tendp, tendp, tendp, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+
+    final EditText taskInput = new EditText(this);
+    taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
+
+    taskInput.setText(task.getText());
+
+    final SeekBar priority = new SeekBar(this);
+    priority.setMax(100);
+    priority.setProgress(task.getPriority());
+    alertLayout.addView(taskInput);
+    alertLayout.addView(priority);
+    builder.setView(alertLayout);
+
+    builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        createTask(taskInput.getText().toString());
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    final AlertDialog dialog = builder.create();
+    return dialog;
   }
 
   /**
@@ -445,9 +525,7 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      t.setText(t.getText() + " GET_ITEM_HAS_BEEN_CALLED");
       return PlaceholderFragment.newInstance(position, boardList, boardTaskList);
-
     }
 
     @Override
