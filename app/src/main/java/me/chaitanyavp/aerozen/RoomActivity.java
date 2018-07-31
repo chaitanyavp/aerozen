@@ -1,7 +1,11 @@
 package me.chaitanyavp.aerozen;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.FragmentTransaction;
+import android.app.TimePickerDialog;
+import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -32,6 +36,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
+import android.widget.TimePicker;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
@@ -45,6 +50,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.Calendar;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
@@ -65,6 +71,8 @@ public class RoomActivity extends AppCompatActivity {
   private ArrayList<String> boardList;
   private HashMap<String, ChildEventListener> boardChildListeners;
   private HashMap<String, ArrayList<String>> boardTaskList;
+  private Calendar calendar;
+  private int TEN_DP;
 
   /**
    * The {@link ViewPager} that will host the section contents.
@@ -91,7 +99,14 @@ public class RoomActivity extends AppCompatActivity {
     mViewPager = (ViewPager) findViewById(R.id.container);
     mViewPager.setAdapter(mSectionsPagerAdapter);
 
+    calendar = Calendar.getInstance();
+
     Log.w("BAD", "we have began");
+    TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
 
     FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
     fab1.setOnClickListener(new View.OnClickListener() {
@@ -116,37 +131,44 @@ public class RoomActivity extends AppCompatActivity {
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    int tendp = (int) TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        10,
-        getResources().getDisplayMetrics()
-    );
-    alertLayoutParams.setMargins(tendp, tendp, tendp, 0);
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     alertLayout.setOrientation(LinearLayout.VERTICAL);
     alertLayout.setLayoutParams(alertLayoutParams);
-    alertLayout.setPadding(tendp, tendp, tendp, tendp);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
 
     final LinearLayout dueDateLayout = new LinearLayout(this);
     LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-//    dueDateLayoutParams.setMargins(tendp, tendp, tendp, 0);
+//    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
     dueDateLayout.setLayoutParams(dueDateLayoutParams);
 
-    final DatePicker datePicker = new DatePicker(this);
-    datePicker.setVisibility(View.GONE);
+    final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
+      @Override
+      public void onTimeSet(TimePicker timePicker, int i, int i1) {
+
+      }
+    }, 23, 59, false);
+
+    final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
+      @Override
+      public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+        timePickerDialog.show();
+      }
+    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+
     CheckBox dueDateCheckBox = new CheckBox(this);
     dueDateCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
        @Override
        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-          datePicker.setEnabled(isChecked);
           if(isChecked){
-            datePicker.setVisibility(View.VISIBLE);
+            datePickerDialog.show();
           }
           else{
-            datePicker.setVisibility(View.GONE);
+
           }
        }
      }
@@ -161,7 +183,6 @@ public class RoomActivity extends AppCompatActivity {
     final SeekBar priority = new SeekBar(this);
     alertLayout.addView(taskInput);
     alertLayout.addView(dueDateLayout);
-    alertLayout.addView(datePicker);
     alertLayout.addView(priority);
     builder.setView(alertLayout);
 
@@ -358,12 +379,7 @@ public class RoomActivity extends AppCompatActivity {
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    int tendp = (int) TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        10,
-        getResources().getDisplayMetrics()
-    );
-    alertLayoutParams.setMargins(tendp, tendp, tendp, 0);
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     alertLayout.setOrientation(LinearLayout.VERTICAL);
     alertLayout.setLayoutParams(alertLayoutParams);
@@ -454,24 +470,24 @@ public class RoomActivity extends AppCompatActivity {
           LinearLayout.LayoutParams.WRAP_CONTENT
       );
       Resources r = context.getResources();
-      int tendp = (int) TypedValue.applyDimension(
+      final int TEN_DP = (int) TypedValue.applyDimension(
           TypedValue.COMPLEX_UNIT_DIP,
           10,
           r.getDisplayMetrics()
       );
-      params.setMargins(tendp, tendp, tendp, 0);
+      params.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
       newCard.setLayoutParams(params);
 
       CardView.LayoutParams cardParams = new CardView.LayoutParams(
           CardView.LayoutParams.WRAP_CONTENT,
           CardView.LayoutParams.WRAP_CONTENT
       );
-      int sixteendp = (int) TypedValue.applyDimension(
+      final int SIXTEEN_DP = (int) TypedValue.applyDimension(
           TypedValue.COMPLEX_UNIT_DIP,
           16,
           r.getDisplayMetrics()
       );
-      cardParams.setMargins(sixteendp, sixteendp, sixteendp, sixteendp);
+      cardParams.setMargins(SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP);
       textView.setLayoutParams(cardParams);
 
       return newCard;
