@@ -126,79 +126,81 @@ public class RoomActivity extends AppCompatActivity {
       }
     });
 
-    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("Add task");
-    final LinearLayout alertLayout = new LinearLayout(this);
-    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+//    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//    builder.setTitle("Add task");
+//    final LinearLayout alertLayout = new LinearLayout(this);
+//    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+//
+//    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+//    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+//    alertLayout.setOrientation(LinearLayout.VERTICAL);
+//    alertLayout.setLayoutParams(alertLayoutParams);
+//    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+//
+//    final LinearLayout dueDateLayout = new LinearLayout(this);
+//    LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
+//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+////    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+//    dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+//    dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
+//    dueDateLayout.setLayoutParams(dueDateLayoutParams);
+//
+//    final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
+//      @Override
+//      public void onTimeSet(TimePicker timePicker, int i, int i1) {
+//
+//      }
+//    }, 23, 59, false);
+//
+//    final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
+//      @Override
+//      public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+//        timePickerDialog.show();
+//      }
+//    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+//
+//    CheckBox dueDateCheckBox = new CheckBox(this);
+//    dueDateCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//       @Override
+//       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//          if(isChecked){
+//            datePickerDialog.show();
+//          }
+//          else{
+//
+//          }
+//       }
+//     }
+//    );
+//    TextView dueDateLabel = new TextView(this);
+//    dueDateLabel.setText(" Due Date");
+//    dueDateLayout.addView(dueDateCheckBox);
+//    dueDateLayout.addView(dueDateLabel);
+//
+//    final EditText taskInput = new EditText(this);
+//    taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
+//    final SeekBar priority = new SeekBar(this);
+//    alertLayout.addView(taskInput);
+//    alertLayout.addView(dueDateLayout);
+//    alertLayout.addView(priority);
+//    builder.setView(alertLayout);
+//
+//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//      @Override
+//      public void onClick(DialogInterface dialog, int which) {
+//        createTask(taskInput.getText().toString());
+//      }
+//    });
+//    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//      @Override
+//      public void onClick(DialogInterface dialog, int which) {
+//        dialog.cancel();
+//      }
+//    });
+//    final AlertDialog dialog = builder.create();
 
-    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-    alertLayout.setOrientation(LinearLayout.VERTICAL);
-    alertLayout.setLayoutParams(alertLayoutParams);
-    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
-
-    final LinearLayout dueDateLayout = new LinearLayout(this);
-    LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-//    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-    dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-    dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
-    dueDateLayout.setLayoutParams(dueDateLayoutParams);
-
-    final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
-      @Override
-      public void onTimeSet(TimePicker timePicker, int i, int i1) {
-
-      }
-    }, 23, 59, false);
-
-    final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
-      @Override
-      public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-        timePickerDialog.show();
-      }
-    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-
-    CheckBox dueDateCheckBox = new CheckBox(this);
-    dueDateCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-       @Override
-       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-          if(isChecked){
-            datePickerDialog.show();
-          }
-          else{
-
-          }
-       }
-     }
-    );
-    TextView dueDateLabel = new TextView(this);
-    dueDateLabel.setText(" Due Date");
-    dueDateLayout.addView(dueDateCheckBox);
-    dueDateLayout.addView(dueDateLabel);
-
-    final EditText taskInput = new EditText(this);
-    taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
-    final SeekBar priority = new SeekBar(this);
-    alertLayout.addView(taskInput);
-    alertLayout.addView(dueDateLayout);
-    alertLayout.addView(priority);
-    builder.setView(alertLayout);
-
-    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        createTask(taskInput.getText().toString());
-      }
-    });
-    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        dialog.cancel();
-      }
-    });
-    final AlertDialog dialog = builder.create();
+    final AlertDialog dialog = createTaskDialog(null);
 
     FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
     fab3.setOnClickListener(new View.OnClickListener() {
@@ -375,40 +377,87 @@ public class RoomActivity extends AppCompatActivity {
 
   private AlertDialog createTaskDialog(Task task) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("Update Task");
+    builder.setTitle("Add task");
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
     alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     alertLayout.setOrientation(LinearLayout.VERTICAL);
     alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final LinearLayout dueDateLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
+          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    //    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
+    dueDateLayout.setLayoutParams(dueDateLayoutParams);
+
+    final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
+      @Override
+      public void onTimeSet(TimePicker timePicker, int i, int i1) {
+
+      }
+    }, 23, 59, false);
+
+    final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
+      @Override
+      public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+          timePickerDialog.show();
+      }
+    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+
+    CheckBox dueDateCheckBox = new CheckBox(this);
+    dueDateCheckBox.setOnCheckedChangeListener(
+          new CompoundButton.OnCheckedChangeListener() {
+             @Override
+             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                 if(isChecked){
+                     datePickerDialog.show();
+                 }
+                 else{
+
+                 }
+             }
+         }
+    );
+    TextView dueDateLabel = new TextView(this);
+    dueDateLabel.setText(" Due Date");
+    dueDateLayout.addView(dueDateCheckBox);
+    dueDateLayout.addView(dueDateLabel);
 
     final EditText taskInput = new EditText(this);
     taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
-
-    taskInput.setText(task.getText());
-
     final SeekBar priority = new SeekBar(this);
     priority.setMax(100);
-    priority.setProgress(task.getPriority());
     alertLayout.addView(taskInput);
+    alertLayout.addView(dueDateLayout);
     alertLayout.addView(priority);
     builder.setView(alertLayout);
 
-    builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
+
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
-        createTask(taskInput.getText().toString());
+          createTask(taskInput.getText().toString());
       }
     });
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
-        dialog.cancel();
+          dialog.cancel();
       }
     });
     final AlertDialog dialog = builder.create();
+
+    if(task != null){
+        builder.setTitle("Update Task");
+        taskInput.setText(task.getText());
+        priority.setProgress(task.getPriority());
+    }
     return dialog;
   }
 
