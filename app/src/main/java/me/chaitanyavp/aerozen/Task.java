@@ -1,6 +1,7 @@
 package me.chaitanyavp.aerozen;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Task {
 
@@ -21,9 +22,9 @@ public class Task {
     this.takers = new ArrayList<String>();
   }
 
-  public Task(String creator, String text, int priority, int points, long dueDate) {
+  public Task(String creator, String text, int priority, int points, HashMap<String, Long> dueDate) {
     this(creator, text, priority, points);
-    this.dueDate = dueDate;
+    setDueDate(dueDate);
   }
 
   public String getId() {
@@ -52,5 +53,9 @@ public class Task {
 
   public void removeTaker(String taker) {
     takers.remove(taker);
+  }
+
+  public void setDueDate(HashMap<String,Long> dateTime){
+    this.dueDate = 555555555;
   }
 }

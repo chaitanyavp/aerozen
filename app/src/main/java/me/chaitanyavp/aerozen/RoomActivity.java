@@ -54,6 +54,7 @@ import java.util.Calendar;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -375,7 +376,7 @@ public class RoomActivity extends AppCompatActivity {
         .setValue(task);
   }
 
-  private AlertDialog createTaskDialog(Task task) {
+  private AlertDialog createTaskDialog(final Task task) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle("Add task");
     final LinearLayout alertLayout = new LinearLayout(this);
@@ -396,30 +397,45 @@ public class RoomActivity extends AppCompatActivity {
     dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
     dueDateLayout.setLayoutParams(dueDateLayoutParams);
 
+    final HashMap<String,Long> dateTime = new HashMap<>();
+    dateTime.put("year", (long) -1);
+    dateTime.put("month", (long) -1);
+    dateTime.put("day", (long) -1);
+    dateTime.put("hour", (long) -1);
+    dateTime.put("min", (long) -1);
+
+    final CheckBox dueDateCheckBox = new CheckBox(this);
+
     final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
       @Override
       public void onTimeSet(TimePicker timePicker, int i, int i1) {
-
+         dateTime.put("hour", (long) i);
+         dateTime.put("minute", (long) i1);
+         dueDateCheckBox.setChecked(true);
       }
     }, 23, 59, false);
 
     final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
       @Override
       public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
+          dateTime.put("year", (long) i);
+          dateTime.put("month", (long) i1);
+          dateTime.put("day", (long) i2);
           timePickerDialog.show();
       }
     }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 
-    CheckBox dueDateCheckBox = new CheckBox(this);
     dueDateCheckBox.setOnCheckedChangeListener(
           new CompoundButton.OnCheckedChangeListener() {
              @Override
              public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                  if(isChecked){
+                     dueDateCheckBox.setChecked(false);
                      datePickerDialog.show();
+//                     dueDateCheckBox.setChecked(dateTime.values().contains((long) -1));
                  }
                  else{
-
+                    dateTime.put("year", (long) -1);
                  }
              }
          }
@@ -438,10 +454,22 @@ public class RoomActivity extends AppCompatActivity {
     alertLayout.addView(priority);
     builder.setView(alertLayout);
 
-
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
+          if(task != null){
+
+          }
+          else{
+              Task newTask;
+              if(dueDateCheckBox.isChecked() && !dateTime.values().contains((long) -1)){
+                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
+              }
+              else{
+                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3, dateTime);
+              }
+
+          }
           createTask(taskInput.getText().toString());
       }
     });
@@ -451,13 +479,16 @@ public class RoomActivity extends AppCompatActivity {
           dialog.cancel();
       }
     });
+      if(task != null){
+          builder.setTitle("Update Task");
+          taskInput.setText(task.getText());
+          priority.setProgress(task.getPriority());
+      }
+      else{
+      }
+
     final AlertDialog dialog = builder.create();
 
-    if(task != null){
-        builder.setTitle("Update Task");
-        taskInput.setText(task.getText());
-        priority.setProgress(task.getPriority());
-    }
     return dialog;
   }
 
