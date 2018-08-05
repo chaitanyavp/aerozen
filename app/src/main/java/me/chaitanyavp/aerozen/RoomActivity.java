@@ -48,8 +48,10 @@ import android.widget.TextView;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 import org.w3c.dom.Text;
 
@@ -127,80 +129,6 @@ public class RoomActivity extends AppCompatActivity {
       }
     });
 
-//    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//    builder.setTitle("Add task");
-//    final LinearLayout alertLayout = new LinearLayout(this);
-//    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-//
-//    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-//    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-//    alertLayout.setOrientation(LinearLayout.VERTICAL);
-//    alertLayout.setLayoutParams(alertLayoutParams);
-//    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
-//
-//    final LinearLayout dueDateLayout = new LinearLayout(this);
-//    LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
-//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-////    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-//    dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-//    dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
-//    dueDateLayout.setLayoutParams(dueDateLayoutParams);
-//
-//    final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
-//      @Override
-//      public void onTimeSet(TimePicker timePicker, int i, int i1) {
-//
-//      }
-//    }, 23, 59, false);
-//
-//    final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
-//      @Override
-//      public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-//        timePickerDialog.show();
-//      }
-//    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-//
-//    CheckBox dueDateCheckBox = new CheckBox(this);
-//    dueDateCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//       @Override
-//       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//          if(isChecked){
-//            datePickerDialog.show();
-//          }
-//          else{
-//
-//          }
-//       }
-//     }
-//    );
-//    TextView dueDateLabel = new TextView(this);
-//    dueDateLabel.setText(" Due Date");
-//    dueDateLayout.addView(dueDateCheckBox);
-//    dueDateLayout.addView(dueDateLabel);
-//
-//    final EditText taskInput = new EditText(this);
-//    taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
-//    final SeekBar priority = new SeekBar(this);
-//    alertLayout.addView(taskInput);
-//    alertLayout.addView(dueDateLayout);
-//    alertLayout.addView(priority);
-//    builder.setView(alertLayout);
-//
-//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//      @Override
-//      public void onClick(DialogInterface dialog, int which) {
-//        createTask(taskInput.getText().toString());
-//      }
-//    });
-//    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//      @Override
-//      public void onClick(DialogInterface dialog, int which) {
-//        dialog.cancel();
-//      }
-//    });
-//    final AlertDialog dialog = builder.create();
-
     final AlertDialog dialog = createTaskDialog(null);
 
     FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
@@ -267,7 +195,7 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
-        tasks.put(dataSnapshot.getKey(), (Task) dataSnapshot.getValue());
+        tasks.put(dataSnapshot.getKey(), getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(), (String) dataSnapshot.getValue()));
         Log.w("BAD", "task child added");
         t.setText(t.getText() + " task child added");
         mSectionsPagerAdapter.updateTasks(boardTaskList);
@@ -357,12 +285,44 @@ public class RoomActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-  private void createTask(String task) {
+  private void addTasktoDatabase(Task task) {
     int position = mViewPager.getCurrentItem();
+
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-        + roomID + "_" + boardList.get(position) + "/tasks/")
-        .child(userID + System.currentTimeMillis())
-        .setValue(task);
+        + roomID + "_" + boardList.get(position) + "/").child("tasks").child(task.getId()).setValue(task.getText());
+
+    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+    taskRef.child("task_duedate").child(task.getId()).setValue(task.getDueDate());
+    taskRef.child("task_priority").child(task.getId()).setValue(task.getPriority());
+    taskRef.child("task_takers").child(task.getId()).setValue(task.getTakerString());
+    taskRef.child("task_points").child(task.getId()).setValue(task.getPoints());
+    taskRef.child("task_creator").child(task.getId()).setValue(task.getCreator());
+    taskRef.child("task_room").child(task.getId()).setValue(roomID);
+
+  }
+
+  private Task getTaskFromDatabaseAndAddListeners(String taskID, String text){
+    //TODO: Add value event listeners for each value and store a reference to each one within the task.
+//    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+//    taskRef.child("task_duedate").child(taskID).addValueEventListener(new ValueEventListener() {
+//      @Override
+//      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//        boardTaskList.get()
+//      }
+//
+//      @Override
+//      public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//      }
+//    })
+//    taskRef.child("task_priority").child(taskID).setValue(task.getPriority());
+//    taskRef.child("task_takers").child(taskID).setValue(task.getTakerString());
+//    taskRef.child("task_points").child(taskID).setValue(task.getPoints());
+//    taskRef.child("task_creator").child(taskID).setValue(task.getCreator());
+//    taskRef.child("task_room").child(taskID).setValue(roomID);
+//
+//    Task newTask = new Task()
+    return null;
   }
 
   private AlertDialog createTaskDialog(final Task task) {
@@ -452,14 +412,15 @@ public class RoomActivity extends AppCompatActivity {
           else{
               Task newTask;
               if(dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)){
-                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
-              }
-              else{
                   newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3, dateTime);
               }
-
+              else{
+                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
+              }
+            newTask.addTaker(userID);
+            addTasktoDatabase(newTask);
           }
-          createTask(taskInput.getText().toString());
+
       }
     });
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
