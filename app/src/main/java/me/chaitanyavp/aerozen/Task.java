@@ -1,5 +1,6 @@
 package me.chaitanyavp.aerozen;
 
+import java.lang.reflect.Array;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ public class Task {
     this.id = creator + this.creationDate;
     this.priority = priority;
     this.takers = new ArrayList<String>();
+    this.text = text;
+    this.points = points;
   }
 
   public Task(String creator, String text, int priority, int points, HashMap<String, Integer> dueDate) {
@@ -71,5 +74,31 @@ public class Task {
 
   public void setDueDate(long dateTimeEpoch){
     this.dueDate = dateTimeEpoch;
+  }
+
+  public long getDueDate() {
+    return dueDate;
+  }
+
+  public String getCreator() {
+    return creator;
+  }
+
+  public String getTakerString(){
+    StringBuilder takerString = new StringBuilder();
+    for (String s : takers)
+    {
+      takerString.append(s);
+      takerString.append(" ");
+    }
+    return takerString.toString();
+  }
+
+  public int getPoints() {
+    return points;
+  }
+
+  public void setPoints(int points) {
+    this.points = points;
   }
 }
