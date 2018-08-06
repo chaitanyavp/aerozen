@@ -103,7 +103,7 @@ public class RoomActivity extends AppCompatActivity {
     mViewPager.setAdapter(mSectionsPagerAdapter);
 
     calendar = Calendar.getInstance();
-
+    System.out.println("VERY GOOD 1");
     Log.w("BAD", "we have began");
     TEN_DP = (int) TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
@@ -140,7 +140,7 @@ public class RoomActivity extends AppCompatActivity {
             .setAction("Action", null).show();
       }
     });
-
+    System.out.println("VERY GOOD");
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
@@ -285,7 +285,7 @@ public class RoomActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-  private void addTasktoDatabase(Task task) {
+  private void addTaskToDatabase(Task task) {
     int position = mViewPager.getCurrentItem();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
@@ -302,27 +302,17 @@ public class RoomActivity extends AppCompatActivity {
   }
 
   private Task getTaskFromDatabaseAndAddListeners(String taskID, String text){
-    //TODO: Add value event listeners for each value and store a reference to each one within the task.
-//    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
-//    taskRef.child("task_duedate").child(taskID).addValueEventListener(new ValueEventListener() {
-//      @Override
-//      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//        boardTaskList.get()
-//      }
-//
-//      @Override
-//      public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//      }
-//    })
-//    taskRef.child("task_priority").child(taskID).setValue(task.getPriority());
-//    taskRef.child("task_takers").child(taskID).setValue(task.getTakerString());
-//    taskRef.child("task_points").child(taskID).setValue(task.getPoints());
-//    taskRef.child("task_creator").child(taskID).setValue(task.getCreator());
-//    taskRef.child("task_room").child(taskID).setValue(roomID);
-//
-//    Task newTask = new Task()
-    return null;
+    String creator = taskID.substring(0, taskID.length() - 13);
+    long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
+    final Task existingTask = new Task(creator, creationDate);
+
+    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+
+    existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
+    existingTask.addPriorityListener(taskRef, mSectionsPagerAdapter);
+    existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
+    existingTask.addDueDateListener(taskRef, mSectionsPagerAdapter);
+    return existingTask;
   }
 
   private AlertDialog createTaskDialog(final Task task) {
@@ -418,7 +408,7 @@ public class RoomActivity extends AppCompatActivity {
                   newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
               }
             newTask.addTaker(userID);
-            addTasktoDatabase(newTask);
+            addTaskToDatabase(newTask);
           }
 
       }

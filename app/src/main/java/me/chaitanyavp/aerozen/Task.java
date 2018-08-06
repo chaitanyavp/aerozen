@@ -1,13 +1,19 @@
 package me.chaitanyavp.aerozen;
 
+import android.support.annotation.NonNull;
 import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import java.lang.reflect.Array;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import me.chaitanyavp.aerozen.RoomActivity.SectionsPagerAdapter;
 
 public class Task {
 
@@ -22,15 +28,19 @@ public class Task {
 
   private HashMap<String, ValueEventListener> eventListeners;
 
-  public Task(String creator, long creationDate, String text, int priority, int points){
+  public Task(String creator, long creationDate){
     this.creator = creator;
     this.creationDate = creationDate;
     this.id = creator + this.creationDate;
-    this.priority = priority;
     this.takers = new ArrayList<String>();
+    this.eventListeners = new HashMap<String, ValueEventListener>();
+  }
+
+  public Task(String creator, long creationDate, String text, int priority, int points){
+    this(creator, creationDate);
+    this.priority = priority;
     this.text = text;
     this.points = points;
-    this.eventListeners = new HashMap<String, ValueEventListener>();
   }
 
   public Task(String creator, long creationDate, String text, int priority, int points, long dueDateEpoch){
@@ -116,32 +126,92 @@ public class Task {
     this.points = points;
   }
 
-  public void storeDueDateListener(ValueEventListener v){
-    eventListeners.put("duedate", v);
+  // Created dueDateListener for Database at <<taskRef>> and notifies <<adapter>>.
+  public void addDueDateListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        setDueDate((long) dataSnapshot.getValue());
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_duedate").child(this.id).addValueEventListener(listener);
+    eventListeners.put("duedate", listener);
   }
   public ValueEventListener getDueDateListener(){
     return eventListeners.get("duedate");
   }
 
-  public void storeTakersListener(ValueEventListener v){
-    eventListeners.put("takers", v);
+  public void addTakersListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        takers = (ArrayList<String>) Arrays.asList(((String) dataSnapshot.getValue()).split("\\s"));
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_takers").child(this.id).addValueEventListener(listener);
+    eventListeners.put("takers", listener);
   }
   public ValueEventListener getTakersListener(){
     return eventListeners.get("takers");
   }
 
-  public void storePriorityListener(ValueEventListener v){
-    eventListeners.put("priority", v);
+  public void addPriorityListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        setPriority((int) dataSnapshot.getValue());
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_priority").child(this.id).addValueEventListener(listener);
+    eventListeners.put("priority", listener);
   }
   public ValueEventListener getPriorityListener(){
     return eventListeners.get("priority");
   }
 
-  public void storePointListener(ValueEventListener v){
-    eventListeners.put("points", v);
+  public void addPointsListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        setPriority((int) dataSnapshot.getValue());
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_points").child(this.id).addValueEventListener(listener);
+    eventListeners.put("points", listener);
   }
   public ValueEventListener getPointListener(){
     return eventListeners.get("points");
+  }
+
+  public void removeAllListeners(DatabaseReference taskRef){
+    if(eventListeners.containsKey("points")) {
+      taskRef.child("task_points").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("points");
+    }
+    if(eventListeners.containsKey("priority")) {
+      taskRef.child("task_priority").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("priority");
+    }
+    if(eventListeners.containsKey("takers")) {
+      taskRef.child("task_takers").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("takers");
+    }
+    if(eventListeners.containsKey("duedate")) {
+      taskRef.child("task_duedate").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("duedate");
+    }
   }
 
 }
