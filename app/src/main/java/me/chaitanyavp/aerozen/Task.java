@@ -1,6 +1,7 @@
 package me.chaitanyavp.aerozen;
 
 import android.support.annotation.NonNull;
+import android.widget.TextView;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -148,7 +149,7 @@ public class Task {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        takers = (ArrayList<String>) Arrays.asList(((String) dataSnapshot.getValue()).split("\\s"));
+        takers = new ArrayList<String>(Arrays.asList(((String) dataSnapshot.getValue()).split("\\s")));
         adapter.notifyDataSetChanged();
       }
       @Override
@@ -165,7 +166,7 @@ public class Task {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        setPriority((int) dataSnapshot.getValue());
+        setPriority(Integer.parseInt(dataSnapshot.getValue().toString()));
         adapter.notifyDataSetChanged();
       }
       @Override
@@ -182,7 +183,7 @@ public class Task {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        setPriority((int) dataSnapshot.getValue());
+        setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
         adapter.notifyDataSetChanged();
       }
       @Override

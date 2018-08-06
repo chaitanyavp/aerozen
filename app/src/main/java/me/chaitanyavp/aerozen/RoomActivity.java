@@ -195,7 +195,9 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
-        tasks.put(dataSnapshot.getKey(), getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(), (String) dataSnapshot.getValue()));
+        Task task = getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
+        task.setText((String) dataSnapshot.getValue());
+        tasks.put(dataSnapshot.getKey(), task);
         Log.w("BAD", "task child added");
         t.setText(t.getText() + " task child added");
         mSectionsPagerAdapter.updateTasks(boardTaskList);
@@ -298,7 +300,6 @@ public class RoomActivity extends AppCompatActivity {
     taskRef.child("task_points").child(task.getId()).setValue(task.getPoints());
     taskRef.child("task_creator").child(task.getId()).setValue(task.getCreator());
     taskRef.child("task_room").child(task.getId()).setValue(roomID);
-
   }
 
   private Task getTaskFromDatabaseAndAddListeners(String taskID, String text){
@@ -313,6 +314,9 @@ public class RoomActivity extends AppCompatActivity {
     existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
     existingTask.addDueDateListener(taskRef, mSectionsPagerAdapter);
     return existingTask;
+
+//    Task task = new Task(userID, "djowiadjowiadjioaw", 5, 5, 45324532);
+//    return task;
   }
 
   private AlertDialog createTaskDialog(final Task task) {
@@ -330,7 +334,7 @@ public class RoomActivity extends AppCompatActivity {
 
     final LinearLayout dueDateLayout = new LinearLayout(this);
     LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     //    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
