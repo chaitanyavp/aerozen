@@ -48,8 +48,10 @@ import android.widget.TextView;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 import org.w3c.dom.Text;
 
@@ -71,7 +73,7 @@ public class RoomActivity extends AppCompatActivity {
   private SectionsPagerAdapter mSectionsPagerAdapter;
   private ArrayList<String> boardList;
   private HashMap<String, ChildEventListener> boardChildListeners;
-  private HashMap<String, ArrayList<String>> boardTaskList;
+  private HashMap<String, HashMap<String, Task>> boardTaskList;
   private Calendar calendar;
   private int TEN_DP;
 
@@ -101,7 +103,7 @@ public class RoomActivity extends AppCompatActivity {
     mViewPager.setAdapter(mSectionsPagerAdapter);
 
     calendar = Calendar.getInstance();
-
+    System.out.println("VERY GOOD 1");
     Log.w("BAD", "we have began");
     TEN_DP = (int) TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
@@ -127,80 +129,6 @@ public class RoomActivity extends AppCompatActivity {
       }
     });
 
-//    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//    builder.setTitle("Add task");
-//    final LinearLayout alertLayout = new LinearLayout(this);
-//    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-//
-//    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-//    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-//    alertLayout.setOrientation(LinearLayout.VERTICAL);
-//    alertLayout.setLayoutParams(alertLayoutParams);
-//    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
-//
-//    final LinearLayout dueDateLayout = new LinearLayout(this);
-//    LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
-//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-////    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-//    dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-//    dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
-//    dueDateLayout.setLayoutParams(dueDateLayoutParams);
-//
-//    final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
-//      @Override
-//      public void onTimeSet(TimePicker timePicker, int i, int i1) {
-//
-//      }
-//    }, 23, 59, false);
-//
-//    final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
-//      @Override
-//      public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-//        timePickerDialog.show();
-//      }
-//    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-//
-//    CheckBox dueDateCheckBox = new CheckBox(this);
-//    dueDateCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//       @Override
-//       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//          if(isChecked){
-//            datePickerDialog.show();
-//          }
-//          else{
-//
-//          }
-//       }
-//     }
-//    );
-//    TextView dueDateLabel = new TextView(this);
-//    dueDateLabel.setText(" Due Date");
-//    dueDateLayout.addView(dueDateCheckBox);
-//    dueDateLayout.addView(dueDateLabel);
-//
-//    final EditText taskInput = new EditText(this);
-//    taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
-//    final SeekBar priority = new SeekBar(this);
-//    alertLayout.addView(taskInput);
-//    alertLayout.addView(dueDateLayout);
-//    alertLayout.addView(priority);
-//    builder.setView(alertLayout);
-//
-//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//      @Override
-//      public void onClick(DialogInterface dialog, int which) {
-//        createTask(taskInput.getText().toString());
-//      }
-//    });
-//    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//      @Override
-//      public void onClick(DialogInterface dialog, int which) {
-//        dialog.cancel();
-//      }
-//    });
-//    final AlertDialog dialog = builder.create();
-
     final AlertDialog dialog = createTaskDialog(null);
 
     FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
@@ -212,7 +140,7 @@ public class RoomActivity extends AppCompatActivity {
             .setAction("Action", null).show();
       }
     });
-
+    System.out.println("VERY GOOD");
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
@@ -223,7 +151,7 @@ public class RoomActivity extends AppCompatActivity {
     database = FirebaseDatabase.getInstance();
     boardList = new ArrayList<String>();
     boardChildListeners = new HashMap<String, ChildEventListener>();
-    boardTaskList = new HashMap<String, ArrayList<String>>();
+    boardTaskList = new HashMap<String, HashMap<String, Task>>();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
         .addChildEventListener(new ChildEventListener() {
@@ -255,19 +183,21 @@ public class RoomActivity extends AppCompatActivity {
     Log.w("BAD", "on child finished");
   }
 
-  private void addBoard(final String key, String prev) {
+  private void addBoard(final String boardName, String prev) {
     if (prev == null) {
-      boardList.add(0, key);
+      boardList.add(0, boardName);
     } else {
-      boardList.add(boardList.indexOf(prev) + 1, key);
+      boardList.add(boardList.indexOf(prev) + 1, boardName);
     }
-    t.setText(t.getText() + "added" + key);
-    boardTaskList.put(key, new ArrayList<String>());
+    t.setText(t.getText() + "added" + boardName);
+    boardTaskList.put(boardName, new HashMap<String, Task>());
     ChildEventListener boardEventListener = new ChildEventListener() {
       @Override
       public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        ArrayList<String> tasks = boardTaskList.get(key);
-        tasks.add(tasks.indexOf(s) + 1, (String) dataSnapshot.getValue());
+        HashMap<String, Task> tasks = boardTaskList.get(boardName);
+        Task task = getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
+        task.setText((String) dataSnapshot.getValue());
+        tasks.put(dataSnapshot.getKey(), task);
         Log.w("BAD", "task child added");
         t.setText(t.getText() + " task child added");
         mSectionsPagerAdapter.updateTasks(boardTaskList);
@@ -275,33 +205,22 @@ public class RoomActivity extends AppCompatActivity {
 
       @Override
       public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        ArrayList<String> tasks = boardTaskList.get(key);
-        tasks.remove(tasks.indexOf(s) + 1);
-        tasks.add(tasks.indexOf(s) + 1, (String) dataSnapshot.getValue());
+        HashMap<String, Task> tasks = boardTaskList.get(boardName);
+        tasks.put(dataSnapshot.getKey(), (Task) dataSnapshot.getValue());
         t.setText(t.getText() + " task child changed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
 
       @Override
       public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-        ArrayList<String> tasks = boardTaskList.get(key);
-        tasks.remove((String) dataSnapshot.getValue());
+        HashMap<String, Task> tasks = boardTaskList.get(boardName);
+        tasks.remove(dataSnapshot.getKey());
         t.setText(t.getText() + " task child removed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
 
       @Override
       public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        ArrayList<String> tasks = boardTaskList.get(key);
-        String value = (String) dataSnapshot.getValue();
-        tasks.remove(value);
-        if (s == null) {
-          tasks.add(0, key);
-        } else {
-          tasks.add(tasks.indexOf(s) + 1, key);
-        }
-        t.setText(t.getText() + " task child moved");
-        mSectionsPagerAdapter.notifyDataSetChanged();
       }
 
       @Override
@@ -309,9 +228,9 @@ public class RoomActivity extends AppCompatActivity {
 
       }
     };
-    boardChildListeners.put(key, boardEventListener);
+    boardChildListeners.put(boardName, boardEventListener);
     database.getReferenceFromUrl(
-        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + key + "/tasks")
+        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + boardName + "/tasks")
         .addChildEventListener(boardEventListener);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
@@ -368,12 +287,36 @@ public class RoomActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-  private void createTask(String task) {
+  private void addTaskToDatabase(Task task) {
     int position = mViewPager.getCurrentItem();
+
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-        + roomID + "_" + boardList.get(position) + "/tasks/")
-        .child(userID + System.currentTimeMillis())
-        .setValue(task);
+        + roomID + "_" + boardList.get(position) + "/").child("tasks").child(task.getId()).setValue(task.getText());
+
+    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+    taskRef.child("task_duedate").child(task.getId()).setValue(task.getDueDate());
+    taskRef.child("task_priority").child(task.getId()).setValue(task.getPriority());
+    taskRef.child("task_takers").child(task.getId()).setValue(task.getTakerString());
+    taskRef.child("task_points").child(task.getId()).setValue(task.getPoints());
+    taskRef.child("task_creator").child(task.getId()).setValue(task.getCreator());
+    taskRef.child("task_room").child(task.getId()).setValue(roomID);
+  }
+
+  private Task getTaskFromDatabaseAndAddListeners(String taskID, String text){
+    String creator = taskID.substring(0, taskID.length() - 13);
+    long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
+    final Task existingTask = new Task(creator, creationDate);
+
+    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+
+    existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
+    existingTask.addPriorityListener(taskRef, mSectionsPagerAdapter);
+    existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
+    existingTask.addDueDateListener(taskRef, mSectionsPagerAdapter);
+    return existingTask;
+
+//    Task task = new Task(userID, "djowiadjowiadjioaw", 5, 5, 45324532);
+//    return task;
   }
 
   private AlertDialog createTaskDialog(final Task task) {
@@ -391,7 +334,7 @@ public class RoomActivity extends AppCompatActivity {
 
     final LinearLayout dueDateLayout = new LinearLayout(this);
     LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     //    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -463,14 +406,15 @@ public class RoomActivity extends AppCompatActivity {
           else{
               Task newTask;
               if(dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)){
-                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
-              }
-              else{
                   newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3, dateTime);
               }
-
+              else{
+                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
+              }
+            newTask.addTaker(userID);
+            addTaskToDatabase(newTask);
           }
-          createTask(taskInput.getText().toString());
+
       }
     });
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -502,7 +446,7 @@ public class RoomActivity extends AppCompatActivity {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private static HashMap<String, ArrayList<String>> taskMapList;
+    private static HashMap<String, HashMap<String,Task>> taskMapList;
 
     public PlaceholderFragment() {
     }
@@ -512,7 +456,7 @@ public class RoomActivity extends AppCompatActivity {
      * number.
      */
     public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards,
-        HashMap<String, ArrayList<String>> initialTaskMapList) {
+        HashMap<String, HashMap<String,Task>> initialTaskMapList) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
       taskMapList = initialTaskMapList;
@@ -522,7 +466,7 @@ public class RoomActivity extends AppCompatActivity {
       return fragment;
     }
 
-    public static void updateTaskMapList(HashMap<String, ArrayList<String>> newTaskMapList) {
+    public static void updateTaskMapList(HashMap<String, HashMap<String, Task>> newTaskMapList) {
       taskMapList = newTaskMapList;
     }
 
@@ -532,7 +476,7 @@ public class RoomActivity extends AppCompatActivity {
 //        }
 //    }
 
-    public static CardView addCard(LinearLayout parent, String text, Context context) {
+    public static CardView addCard(LinearLayout parent, Task task, Context context) {
       CardView newCard = new CardView(context);
 //      newCard.setOnClickListener(new OnClickListener() {
 //          @Override
@@ -541,7 +485,7 @@ public class RoomActivity extends AppCompatActivity {
 //          }
 //      });
       TextView textView = new TextView(context);
-      textView.setText(text);
+      textView.setText(task.getText());
       newCard.addView(textView);
       parent.addView(newCard);
 
@@ -585,7 +529,7 @@ public class RoomActivity extends AppCompatActivity {
       textView.setText(boardName);
       LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
-      for (String task : taskMapList.get(boardName)) {
+      for (Task task : taskMapList.get(boardName).values()) {
         addCard(parentLayout, task, context);
       }
 
@@ -632,7 +576,7 @@ public class RoomActivity extends AppCompatActivity {
       return boardList.size();
     }
 
-    public void updateTasks(HashMap<String, ArrayList<String>> newTaskList) {
+    public void updateTasks(HashMap<String, HashMap<String, Task>> newTaskList) {
       PlaceholderFragment.updateTaskMapList(newTaskList);
       this.notifyDataSetChanged();
 //      FragmentTransaction tr = getFragmentManager().beginTransaction();

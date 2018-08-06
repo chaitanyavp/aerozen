@@ -1,10 +1,20 @@
 package me.chaitanyavp.aerozen;
 
+import android.support.annotation.NonNull;
+import android.widget.TextView;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import java.lang.reflect.Array;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import me.chaitanyavp.aerozen.RoomActivity.SectionsPagerAdapter;
 
 public class Task {
 
@@ -17,12 +27,30 @@ public class Task {
   private int priority;
   private int points;
 
-  public Task(String creator, String text, int priority, int points) {
-    this.creationDate = System.currentTimeMillis();
+  private HashMap<String, ValueEventListener> eventListeners;
+
+  public Task(String creator, long creationDate){
     this.creator = creator;
+    this.creationDate = creationDate;
     this.id = creator + this.creationDate;
-    this.priority = priority;
     this.takers = new ArrayList<String>();
+    this.eventListeners = new HashMap<String, ValueEventListener>();
+  }
+
+  public Task(String creator, long creationDate, String text, int priority, int points){
+    this(creator, creationDate);
+    this.priority = priority;
+    this.text = text;
+    this.points = points;
+  }
+
+  public Task(String creator, long creationDate, String text, int priority, int points, long dueDateEpoch){
+    this(creator, creationDate, text, priority, points);
+    this.dueDate = dueDateEpoch;
+  }
+
+  public Task(String creator, String text, int priority, int points) {
+    this(creator, System.currentTimeMillis(), text, priority, points);
   }
 
   public Task(String creator, String text, int priority, int points, HashMap<String, Integer> dueDate) {
@@ -72,4 +100,119 @@ public class Task {
   public void setDueDate(long dateTimeEpoch){
     this.dueDate = dateTimeEpoch;
   }
+
+  public long getDueDate() {
+    return dueDate;
+  }
+
+  public String getCreator() {
+    return creator;
+  }
+
+  public String getTakerString(){
+    StringBuilder takerString = new StringBuilder();
+    for (String s : takers)
+    {
+      takerString.append(s);
+      takerString.append(" ");
+    }
+    return takerString.toString();
+  }
+
+  public int getPoints() {
+    return points;
+  }
+
+  public void setPoints(int points) {
+    this.points = points;
+  }
+
+  // Created dueDateListener for Database at <<taskRef>> and notifies <<adapter>>.
+  public void addDueDateListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        setDueDate((long) dataSnapshot.getValue());
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_duedate").child(this.id).addValueEventListener(listener);
+    eventListeners.put("duedate", listener);
+  }
+  public ValueEventListener getDueDateListener(){
+    return eventListeners.get("duedate");
+  }
+
+  public void addTakersListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        takers = new ArrayList<String>(Arrays.asList(((String) dataSnapshot.getValue()).split("\\s")));
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_takers").child(this.id).addValueEventListener(listener);
+    eventListeners.put("takers", listener);
+  }
+  public ValueEventListener getTakersListener(){
+    return eventListeners.get("takers");
+  }
+
+  public void addPriorityListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        setPriority(Integer.parseInt(dataSnapshot.getValue().toString()));
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_priority").child(this.id).addValueEventListener(listener);
+    eventListeners.put("priority", listener);
+  }
+  public ValueEventListener getPriorityListener(){
+    return eventListeners.get("priority");
+  }
+
+  public void addPointsListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+    ValueEventListener listener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
+        adapter.notifyDataSetChanged();
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+    taskRef.child("task_points").child(this.id).addValueEventListener(listener);
+    eventListeners.put("points", listener);
+  }
+  public ValueEventListener getPointListener(){
+    return eventListeners.get("points");
+  }
+
+  public void removeAllListeners(DatabaseReference taskRef){
+    if(eventListeners.containsKey("points")) {
+      taskRef.child("task_points").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("points");
+    }
+    if(eventListeners.containsKey("priority")) {
+      taskRef.child("task_priority").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("priority");
+    }
+    if(eventListeners.containsKey("takers")) {
+      taskRef.child("task_takers").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("takers");
+    }
+    if(eventListeners.containsKey("duedate")) {
+      taskRef.child("task_duedate").child(this.id).removeEventListener(eventListeners.get("points"));
+      eventListeners.remove("duedate");
+    }
+  }
+
 }
