@@ -31,6 +31,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import android.widget.CheckBox;
@@ -206,15 +207,17 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
-        tasks.put(dataSnapshot.getKey(), (Task) dataSnapshot.getValue());
+        tasks.get(dataSnapshot.getKey()).setText((String) dataSnapshot.getValue());
         t.setText(t.getText() + " task child changed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
 
       @Override
       public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+        //TODO: Handle child removals (clear event listeners)
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
-        tasks.remove(dataSnapshot.getKey());
+        Task removed = tasks.remove(dataSnapshot.getKey());
+        removed.removeAllListeners(database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
         t.setText(t.getText() + " task child removed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
@@ -321,7 +324,6 @@ public class RoomActivity extends AppCompatActivity {
 
   private AlertDialog createTaskDialog(final Task task) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("Add task");
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
           LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -335,7 +337,6 @@ public class RoomActivity extends AppCompatActivity {
     final LinearLayout dueDateLayout = new LinearLayout(this);
     LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-    //    dueDateLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
     dueDateLayout.setLayoutParams(dueDateLayoutParams);
@@ -427,8 +428,12 @@ public class RoomActivity extends AppCompatActivity {
           builder.setTitle("Update Task");
           taskInput.setText(task.getText());
           priority.setProgress(task.getPriority());
+          if(task.getDueDate() != 0){
+            dueDateCheckBox.setChecked(true);
+          }
       }
       else{
+          builder.setTitle("Add task");
       }
 
     final AlertDialog dialog = builder.create();
@@ -447,6 +452,7 @@ public class RoomActivity extends AppCompatActivity {
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static HashMap<String, HashMap<String,Task>> taskMapList;
+    private static RoomActivity roomActivity;
 
     public PlaceholderFragment() {
     }
@@ -456,13 +462,14 @@ public class RoomActivity extends AppCompatActivity {
      * number.
      */
     public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards,
-        HashMap<String, HashMap<String,Task>> initialTaskMapList) {
+        HashMap<String, HashMap<String,Task>> initialTaskMapList, RoomActivity room) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
       taskMapList = initialTaskMapList;
       args.putInt(ARG_SECTION_NUMBER, sectionNumber);
       args.putStringArrayList("boardList", boards);
       fragment.setArguments(args);
+      roomActivity = room;
       return fragment;
     }
 
@@ -476,14 +483,14 @@ public class RoomActivity extends AppCompatActivity {
 //        }
 //    }
 
-    public static CardView addCard(LinearLayout parent, Task task, Context context) {
+    public static CardView addCard(LinearLayout parent, final Task task, Context context) {
       CardView newCard = new CardView(context);
-//      newCard.setOnClickListener(new OnClickListener() {
-//          @Override
-//          public void onClick(View view) {
-//              goToRoom(room_id);
-//          }
-//      });
+      newCard.setOnClickListener(new OnClickListener() {
+          @Override
+          public void onClick(View view) {
+              roomActivity.createTaskDialog(task).show();
+          }
+      });
       TextView textView = new TextView(context);
       textView.setText(task.getText());
       newCard.addView(textView);
@@ -565,7 +572,7 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position, boardList, boardTaskList);
+      return PlaceholderFragment.newInstance(position, boardList, boardTaskList, RoomActivity.this);
     }
 
     @Override
