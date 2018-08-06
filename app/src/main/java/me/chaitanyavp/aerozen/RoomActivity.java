@@ -402,15 +402,23 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onClick(DialogInterface dialog, int which) {
           if(task != null){
-            //TODO:
+            task.setText(taskInput.getText().toString());
+            task.setPriority(priority.getProgress());
+            if(dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)){
+              task.setDueDate(dateTime);
+            }
+            else if (!dueDateCheckBox.isChecked()){
+              task.setDueDate(0);
+            }
+            addTaskToDatabase(task);
           }
           else{
               Task newTask;
               if(dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)){
-                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3, dateTime);
+                  newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3, dateTime);
               }
               else{
-                  newTask = new Task(userID, taskInput.getText().toString(), priority.getKeyProgressIncrement(), 3);
+                  newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3);
               }
             newTask.addTaker(userID);
             addTaskToDatabase(newTask);
@@ -476,12 +484,6 @@ public class RoomActivity extends AppCompatActivity {
     public static void updateTaskMapList(HashMap<String, HashMap<String, Task>> newTaskMapList) {
       taskMapList = newTaskMapList;
     }
-
-//    public static void updateTaskList(String key){
-//        for (String task : taskMapList.get(key)){
-//            addCard()
-//        }
-//    }
 
     public static CardView addCard(LinearLayout parent, final Task task, Context context) {
       CardView newCard = new CardView(context);
