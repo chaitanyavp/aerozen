@@ -1,15 +1,10 @@
 package me.chaitanyavp.aerozen;
 
 import android.support.annotation.NonNull;
-import android.widget.TextView;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
-import java.lang.reflect.Array;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -141,9 +136,6 @@ public class Task {
     taskRef.child("task_duedate").child(this.id).addValueEventListener(listener);
     eventListeners.put("duedate", listener);
   }
-  public ValueEventListener getDueDateListener(){
-    return eventListeners.get("duedate");
-  }
 
   public void addTakersListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
     ValueEventListener listener = new ValueEventListener() {
@@ -157,9 +149,6 @@ public class Task {
     };
     taskRef.child("task_takers").child(this.id).addValueEventListener(listener);
     eventListeners.put("takers", listener);
-  }
-  public ValueEventListener getTakersListener(){
-    return eventListeners.get("takers");
   }
 
   public void addPriorityListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
@@ -175,9 +164,6 @@ public class Task {
     taskRef.child("task_priority").child(this.id).addValueEventListener(listener);
     eventListeners.put("priority", listener);
   }
-  public ValueEventListener getPriorityListener(){
-    return eventListeners.get("priority");
-  }
 
   public void addPointsListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
     ValueEventListener listener = new ValueEventListener() {
@@ -191,9 +177,6 @@ public class Task {
     };
     taskRef.child("task_points").child(this.id).addValueEventListener(listener);
     eventListeners.put("points", listener);
-  }
-  public ValueEventListener getPointListener(){
-    return eventListeners.get("points");
   }
 
   public void removeAllListeners(DatabaseReference taskRef){

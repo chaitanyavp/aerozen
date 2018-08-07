@@ -8,6 +8,7 @@ import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
@@ -346,7 +347,7 @@ public class RoomActivity extends AppCompatActivity {
     dateTime.put("month", -1);
     dateTime.put("day", -1);
     dateTime.put("hour", -1);
-    dateTime.put("min", -1);
+    dateTime.put("minute", -1);
 
     final CheckBox dueDateCheckBox = new CheckBox(this);
 
@@ -355,7 +356,6 @@ public class RoomActivity extends AppCompatActivity {
       public void onTimeSet(TimePicker timePicker, int i, int i1) {
          dateTime.put("hour", i);
          dateTime.put("minute", i1);
-         dueDateCheckBox.setChecked(true);
       }
     }, 23, 59, false);
 
@@ -369,17 +369,36 @@ public class RoomActivity extends AppCompatActivity {
       }
     }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 
+    OnDismissListener dateDismiss = new OnDismissListener() {
+      public void onDismiss(DialogInterface dialog) {
+        if(dateTime.get("year") == -1 || dateTime.get("month") == -1 || dateTime.get("day") == -1) {
+          dueDateCheckBox.setChecked(false);
+        }
+      }
+    };
+    OnDismissListener timeDismiss = new OnDismissListener() {
+      public void onDismiss(DialogInterface dialog) {
+        if(dateTime.get("hour") == -1 || dateTime.get("minute") == -1) {
+          dueDateCheckBox.setChecked(false);
+        }
+      }
+    };
+    datePickerDialog.setOnDismissListener(dateDismiss);
+    timePickerDialog.setOnDismissListener(timeDismiss);
+
     dueDateCheckBox.setOnCheckedChangeListener(
           new CompoundButton.OnCheckedChangeListener() {
              @Override
              public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                  if(isChecked){
-                     dueDateCheckBox.setChecked(false);
                      datePickerDialog.show();
-//                     dueDateCheckBox.setChecked(dateTime.values().contains((long) -1));
                  }
                  else{
-                    dateTime.put("year", -1);
+                   dateTime.put("year", -1);
+                   dateTime.put("month", -1);
+                   dateTime.put("day", -1);
+                   dateTime.put("hour", -1);
+                   dateTime.put("minute", -1);
                  }
              }
          }
