@@ -319,6 +319,60 @@ public class RoomActivity extends AppCompatActivity {
 //    return task;
   }
 
+  private AlertDialog addRoomMemberDialog(){
+      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setTitle("Add member by email");
+      final LinearLayout alertLayout = new LinearLayout(this);
+      LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+              LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+      alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+      alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+      alertLayout.setOrientation(LinearLayout.VERTICAL);
+      alertLayout.setLayoutParams(alertLayoutParams);
+      alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+      final EditText memberInput = new EditText(this);
+      memberInput.setInputType(InputType.TYPE_CLASS_TEXT);
+
+      alertLayout.addView(memberInput);
+      builder.setView(alertLayout);
+
+      builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+              database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/emailToUid")
+                      .addListenerForSingleValueEvent(new ValueEventListener() {
+                          @Override
+                          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                              String email = memberInput.getText().toString();
+                              if(!dataSnapshot.hasChild(email)){
+
+                              }
+                              else{
+                                  String newUserID = "";
+                                  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/"+roomID+"/"+newUserID);
+                                  //TODO
+                              }
+                          }
+
+                          @Override
+                          public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                          }
+                      });
+          }
+      });
+      builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+              dialog.cancel();
+          }
+      });
+      final AlertDialog dialog = builder.create();
+      return dialog;
+  }
+
   private AlertDialog createTaskDialog(final Task task) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle("Add task");
