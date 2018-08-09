@@ -124,20 +124,15 @@ public class RoomActivity extends AppCompatActivity {
     fab2.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        Snackbar.make(view, "Replace with your own action bt2", Snackbar.LENGTH_LONG)
-            .setAction("Action", null).show();
+          addRoomMemberDialog().show();
       }
     });
-
-    final AlertDialog dialog = createTaskDialog(null);
 
     FloatingActionButton fab3 = (FloatingActionButton) findViewById(R.id.fab3);
     fab3.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        dialog.show();
-        Snackbar.make(view, "Replace with your own action bt3", Snackbar.LENGTH_LONG)
-            .setAction("Action", null).show();
+          createTaskDialog(null).show();
       }
     });
     System.out.println("VERY GOOD");
@@ -345,14 +340,15 @@ public class RoomActivity extends AppCompatActivity {
                       .addListenerForSingleValueEvent(new ValueEventListener() {
                           @Override
                           public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                              String email = memberInput.getText().toString();
+                              String email = memberInput.getText().toString().replace('.', ',');
                               if(!dataSnapshot.hasChild(email)){
-
+                                createMessageDialog("No user with that email").show();
                               }
                               else{
-                                  String newUserID = "";
-                                  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/"+roomID+"/"+newUserID);
-                                  //TODO
+                                  String newUserID = (String) dataSnapshot.child(email).getValue();
+                                  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/"+roomID+"/"+newUserID).setValue(true);
+                                  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/"+newUserID+"/"+roomID).setValue(true);
+                                  createMessageDialog("User added").show();
                               }
                           }
 
@@ -371,6 +367,16 @@ public class RoomActivity extends AppCompatActivity {
       });
       final AlertDialog dialog = builder.create();
       return dialog;
+  }
+
+  private AlertDialog createMessageDialog(String message){
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage(message)
+              .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                  public void onClick(DialogInterface dialog, int id) {
+                  }
+              });
+      return builder.create();
   }
 
   private AlertDialog createTaskDialog(final Task task) {
