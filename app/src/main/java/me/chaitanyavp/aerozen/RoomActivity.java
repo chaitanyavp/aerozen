@@ -76,6 +76,7 @@ public class RoomActivity extends AppCompatActivity {
   private ArrayList<String> boardList;
   private HashMap<String, ChildEventListener> boardChildListeners;
   private HashMap<String, HashMap<String, Task>> boardTaskList;
+  private HashMap<String, String> boardNames;
   private Calendar calendar;
   private int TEN_DP;
 
@@ -114,17 +115,16 @@ public class RoomActivity extends AppCompatActivity {
         getResources().getDisplayMetrics()
     );
 
-    FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
-    fab1.setOnClickListener(new View.OnClickListener() {
+    FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
+    fab2.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        Snackbar.make(view, "Replace with your own action bt1", Snackbar.LENGTH_LONG)
-            .setAction("Action", null).show();
+        addBoardDialog().show();
       }
     });
 
-    FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
-    fab2.setOnClickListener(new View.OnClickListener() {
+    FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
+    fab1.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         addRoomMemberDialog().show();
@@ -138,7 +138,6 @@ public class RoomActivity extends AppCompatActivity {
         createTaskDialog(null).show();
       }
     });
-    System.out.println("VERY GOOD");
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
@@ -150,22 +149,26 @@ public class RoomActivity extends AppCompatActivity {
     boardList = new ArrayList<String>();
     boardChildListeners = new HashMap<String, ChildEventListener>();
     boardTaskList = new HashMap<String, HashMap<String, Task>>();
+    boardNames = new HashMap<String, String>();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
         .addChildEventListener(new ChildEventListener() {
           @Override
           public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             addBoard(dataSnapshot.getKey(), s);
+            boardNames.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
           }
 
           @Override
           public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             updateBoard(dataSnapshot.getKey());
+            boardNames.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
           }
 
           @Override
           public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
             removeBoard(dataSnapshot.getKey());
+            boardNames.remove(dataSnapshot.getKey());
           }
 
           @Override
@@ -178,7 +181,6 @@ public class RoomActivity extends AppCompatActivity {
 
           }
         });
-    Log.w("BAD", "on child finished");
   }
 
   private void addBoard(final String boardName, String prev) {
@@ -232,7 +234,7 @@ public class RoomActivity extends AppCompatActivity {
     };
     boardChildListeners.put(boardName, boardEventListener);
     database.getReferenceFromUrl(
-        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + boardName + "/tasks")
+        "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/tasks")
         .addChildEventListener(boardEventListener);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
@@ -242,7 +244,7 @@ public class RoomActivity extends AppCompatActivity {
     boardList.remove(key);
     ChildEventListener childEventListener = boardChildListeners.remove(key);
     database.getReferenceFromUrl(
-        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + key + "/tasks")
+        "https://kanban-f611c.firebaseio.com/boards/" + key + "/tasks")
         .removeEventListener(childEventListener);
     t.setText(t.getText() + "Removed" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
@@ -293,7 +295,7 @@ public class RoomActivity extends AppCompatActivity {
     int position = mViewPager.getCurrentItem();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-        + roomID + "_" + boardList.get(position) + "/").child("tasks").child(task.getId())
+        + boardList.get(position) + "/").child("tasks").child(task.getId())
         .setValue(task.getText());
 
     DatabaseReference taskRef = database
@@ -381,6 +383,47 @@ public class RoomActivity extends AppCompatActivity {
     final AlertDialog dialog = builder.create();
     return dialog;
   }
+
+  private AlertDialog addBoardDialog() {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Add new board");
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final EditText boardInput = new EditText(this);
+    boardInput.setInputType(InputType.TYPE_CLASS_TEXT);
+
+    alertLayout.addView(boardInput);
+    builder.setView(alertLayout);
+
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        String boardName = boardInput.getText().toString();
+        String boardID = roomID + "_" + userID + "_" + System.currentTimeMillis();
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID + "/"
+            + boardID).setValue(boardName);
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + roomID + "/"
+            + boardID + "/room_id").setValue(boardName);
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    final AlertDialog dialog = builder.create();
+    return dialog;
+  }
+
 
   private AlertDialog createMessageDialog(String message) {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -546,6 +589,7 @@ public class RoomActivity extends AppCompatActivity {
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static HashMap<String, HashMap<String, Task>> taskMapList;
+    private static HashMap<String, String> boardNames;
     private static RoomActivity roomActivity;
 
     public PlaceholderFragment() {
@@ -556,10 +600,12 @@ public class RoomActivity extends AppCompatActivity {
      * number.
      */
     public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards,
-        HashMap<String, HashMap<String, Task>> initialTaskMapList, RoomActivity room) {
+        HashMap<String, HashMap<String, Task>> initialTaskMapList,
+        HashMap<String, String> initialBoardNames, RoomActivity room) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
       taskMapList = initialTaskMapList;
+      boardNames = initialBoardNames;
       args.putInt(ARG_SECTION_NUMBER, sectionNumber);
       args.putStringArrayList("boardList", boards);
       fragment.setArguments(args);
@@ -567,8 +613,10 @@ public class RoomActivity extends AppCompatActivity {
       return fragment;
     }
 
-    public static void updateTaskMapList(HashMap<String, HashMap<String, Task>> newTaskMapList) {
+    public static void updateTaskMapList(HashMap<String, HashMap<String, Task>> newTaskMapList,
+        HashMap<String, String> newBoardNames) {
       taskMapList = newTaskMapList;
+      boardNames = newBoardNames;
     }
 
     public static CardView addCard(LinearLayout parent, final Task task, Context context) {
@@ -618,13 +666,14 @@ public class RoomActivity extends AppCompatActivity {
       View rootView = inflater.inflate(R.layout.fragment_room, container, false);
       Context context = rootView.getContext();
       int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
-      String boardName = getArguments().getStringArrayList("boardList").get(sectionNumber);
+      String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
+      String boardName = boardNames.get(boardID);
 
       TextView textView = (TextView) rootView.findViewById(R.id.section_label);
       textView.setText(boardName);
       LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
-      for (Task task : taskMapList.get(boardName).values()) {
+      for (Task task : taskMapList.get(boardID).values()) {
         addCard(parentLayout, task, context);
       }
 
@@ -660,7 +709,7 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position, boardList, boardTaskList, RoomActivity.this);
+      return PlaceholderFragment.newInstance(position, boardList, boardTaskList, boardNames, RoomActivity.this);
     }
 
     @Override
@@ -672,18 +721,8 @@ public class RoomActivity extends AppCompatActivity {
     }
 
     public void updateTasks(HashMap<String, HashMap<String, Task>> newTaskList) {
-      PlaceholderFragment.updateTaskMapList(newTaskList);
+      PlaceholderFragment.updateTaskMapList(newTaskList, boardNames);
       this.notifyDataSetChanged();
-//      FragmentTransaction tr = getFragmentManager().beginTransaction();
-//      tr.replace(R.id.container, PlaceholderFragment.this);
-//      tr.commit();
-//        Fragment currentFragment = this.getActivity().getFragmentManager().findFragmentById(R.id.container);
-//        if (currentFragment instanceof PlaceholderFragment) {
-//            FragmentTransaction fragTransaction =   (getActivity()).getFragmentManager().beginTransaction();
-//            fragTransaction.detach(currentFragment);
-//            fragTransaction.attach(currentFragment);
-//            fragTransaction.commit();}
-//        }
     }
   }
 }

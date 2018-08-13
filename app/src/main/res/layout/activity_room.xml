@@ -81,20 +81,20 @@
       fab:menu_shadowYOffset="4dp"
       fab:menu_showShadow="true">
 
-    <com.github.clans.fab.FloatingActionButton
+      <com.github.clans.fab.FloatingActionButton
         android:id="@+id/fab1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/fab_add"
-        fab:fab_label="Menu Item 1"
+        app:fab_label="Add Member"
         fab:fab_size="mini" />
 
-    <com.github.clans.fab.FloatingActionButton
+      <com.github.clans.fab.FloatingActionButton
         android:id="@+id/fab2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/fab_add"
-        fab:fab_label="Add Member"
+        app:fab_label="Add Board"
         fab:fab_size="mini" />
 
     <com.github.clans.fab.FloatingActionButton
