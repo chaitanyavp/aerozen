@@ -658,18 +658,68 @@ public class RoomActivity extends AppCompatActivity {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
-      View rootView = inflater.inflate(R.layout.fragment_room, container, false);
-      Context context = rootView.getContext();
-      int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
-      String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
-      String boardName = boardNames.get(boardID);
+      View rootView;
+        int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
 
-      TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-      textView.setText(boardName);
-      LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+      if (sectionNumber == 0){
+          rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        Context context = rootView.getContext();
+          LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+//        CardView newCard = new CardView(context);
+//        newCard.setOnClickListener(new OnClickListener() {
+//          @Override
+//          public void onClick(View view) {
+//          }
+//        });
+//          TextView test = new TextView(context);
+//          test.setText("manage boards");
+//        newCard.addView(test);
+//
+//        CardView newCard1 = new CardView(context);
+//        newCard1.setOnClickListener(new OnClickListener() {
+//          @Override
+//          public void onClick(View view) {
+//          }
+//        });
+//        TextView test1 = new TextView(context);
+//        test1.setText("see user contributions");
+//        newCard1.addView(test1);
+//
+//        CardView newCard2 = new CardView(context);
+//        newCard2.setOnClickListener(new OnClickListener() {
+//          @Override
+//          public void onClick(View view) {
+//          }
+//        });
+//        TextView test2 = new TextView(context);
+//        test2.setText("manage members");
+//        newCard2.addView(test2);
+//
+//        CardView newCard3 = new CardView(context);
+//        newCard3.setOnClickListener(new OnClickListener() {
+//          @Override
+//          public void onClick(View view) {
+//          }
+//        });
+//        TextView test3 = new TextView(context);
+//        test3.setText("Change rooms");
+//          parentLayout.addView(test);
+//        newCard3.addView(test3);
+      }
+      else {
+          rootView = inflater.inflate(R.layout.fragment_room, container, false);
+          Context context = rootView.getContext();
+          sectionNumber--;
+          String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
+          String boardName = boardNames.get(boardID);
 
-      for (Task task : taskMapList.get(boardID).values()) {
-        addCard(parentLayout, task, context);
+          TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+          textView.setText(boardName);
+          LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+
+          for (Task task : taskMapList.get(boardID).values()) {
+              addCard(parentLayout, task, context);
+          }
       }
 
       return rootView;
