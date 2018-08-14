@@ -76,6 +76,7 @@ public class RoomActivity extends AppCompatActivity {
   private ArrayList<String> boardList;
   private HashMap<String, ChildEventListener> boardChildListeners;
   private HashMap<String, HashMap<String, Task>> boardTaskList;
+  private HashMap<String, String> boardNames;
   private Calendar calendar;
   private int TEN_DP;
 
@@ -87,13 +88,14 @@ public class RoomActivity extends AppCompatActivity {
   private String roomID;
   private String userID;
   private TextView t;
+  private Toolbar toolbar;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_room);
 
-    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+    toolbar = (Toolbar) findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     // Create the adapter that will return a fragment for each of the three
@@ -113,20 +115,19 @@ public class RoomActivity extends AppCompatActivity {
         getResources().getDisplayMetrics()
     );
 
-    FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
-    fab1.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        Snackbar.make(view, "Replace with your own action bt1", Snackbar.LENGTH_LONG)
-            .setAction("Action", null).show();
-      }
-    });
-
     FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
     fab2.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-          addRoomMemberDialog().show();
+        addBoardDialog().show();
+      }
+    });
+
+    FloatingActionButton fab1 = (FloatingActionButton) findViewById(R.id.fab1);
+    fab1.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        addRoomMemberDialog().show();
       }
     });
 
@@ -134,10 +135,9 @@ public class RoomActivity extends AppCompatActivity {
     fab3.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-          createTaskDialog(null).show();
+        createTaskDialog(null).show();
       }
     });
-    System.out.println("VERY GOOD");
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
@@ -149,22 +149,26 @@ public class RoomActivity extends AppCompatActivity {
     boardList = new ArrayList<String>();
     boardChildListeners = new HashMap<String, ChildEventListener>();
     boardTaskList = new HashMap<String, HashMap<String, Task>>();
+    boardNames = new HashMap<String, String>();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
         .addChildEventListener(new ChildEventListener() {
           @Override
           public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             addBoard(dataSnapshot.getKey(), s);
+            boardNames.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
           }
 
           @Override
           public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             updateBoard(dataSnapshot.getKey());
+            boardNames.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
           }
 
           @Override
           public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
             removeBoard(dataSnapshot.getKey());
+            boardNames.remove(dataSnapshot.getKey());
           }
 
           @Override
@@ -177,7 +181,6 @@ public class RoomActivity extends AppCompatActivity {
 
           }
         });
-    Log.w("BAD", "on child finished");
   }
 
   private void addBoard(final String boardName, String prev) {
@@ -192,7 +195,8 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
-        Task task = getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
+        Task task = getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(),
+            (String) dataSnapshot.getValue());
         task.setText((String) dataSnapshot.getValue());
         tasks.put(dataSnapshot.getKey(), task);
         Log.w("BAD", "task child added");
@@ -213,7 +217,8 @@ public class RoomActivity extends AppCompatActivity {
         //TODO: Handle child removals (clear event listeners)
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
         Task removed = tasks.remove(dataSnapshot.getKey());
-        removed.removeAllListeners(database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
+        removed.removeAllListeners(
+            database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
         t.setText(t.getText() + " task child removed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
@@ -229,7 +234,7 @@ public class RoomActivity extends AppCompatActivity {
     };
     boardChildListeners.put(boardName, boardEventListener);
     database.getReferenceFromUrl(
-        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + boardName + "/tasks")
+        "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/tasks")
         .addChildEventListener(boardEventListener);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
@@ -239,7 +244,7 @@ public class RoomActivity extends AppCompatActivity {
     boardList.remove(key);
     ChildEventListener childEventListener = boardChildListeners.remove(key);
     database.getReferenceFromUrl(
-        "https://kanban-f611c.firebaseio.com/boards/" + roomID + "_" + key + "/tasks")
+        "https://kanban-f611c.firebaseio.com/boards/" + key + "/tasks")
         .removeEventListener(childEventListener);
     t.setText(t.getText() + "Removed" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
@@ -290,9 +295,11 @@ public class RoomActivity extends AppCompatActivity {
     int position = mViewPager.getCurrentItem();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-        + roomID + "_" + boardList.get(position) + "/").child("tasks").child(task.getId()).setValue(task.getText());
+        + boardList.get(position) + "/").child("tasks").child(task.getId())
+        .setValue(task.getText());
 
-    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+    DatabaseReference taskRef = database
+        .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
     taskRef.child("task_duedate").child(task.getId()).setValue(task.getDueDate());
     taskRef.child("task_priority").child(task.getId()).setValue(task.getPriority());
     taskRef.child("task_takers").child(task.getId()).setValue(task.getTakerString());
@@ -301,12 +308,13 @@ public class RoomActivity extends AppCompatActivity {
     taskRef.child("task_room").child(task.getId()).setValue(roomID);
   }
 
-  private Task getTaskFromDatabaseAndAddListeners(String taskID, String text){
+  private Task getTaskFromDatabaseAndAddListeners(String taskID, String text) {
     String creator = taskID.substring(0, taskID.length() - 13);
     long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
     final Task existingTask = new Task(creator, creationDate);
 
-    DatabaseReference taskRef =  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+    DatabaseReference taskRef = database
+        .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
 
     existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
     existingTask.addPriorityListener(taskRef, mSectionsPagerAdapter);
@@ -318,76 +326,120 @@ public class RoomActivity extends AppCompatActivity {
 //    return task;
   }
 
-  private AlertDialog addRoomMemberDialog(){
-      final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-      builder.setTitle("Add member by email");
-      final LinearLayout alertLayout = new LinearLayout(this);
-      LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-              LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+  private AlertDialog addRoomMemberDialog() {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Add member by email");
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-      alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-      alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-      alertLayout.setOrientation(LinearLayout.VERTICAL);
-      alertLayout.setLayoutParams(alertLayoutParams);
-      alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
 
-      final EditText memberInput = new EditText(this);
-      memberInput.setInputType(InputType.TYPE_CLASS_TEXT);
+    final EditText memberInput = new EditText(this);
+    memberInput.setInputType(InputType.TYPE_CLASS_TEXT);
 
-      alertLayout.addView(memberInput);
-      builder.setView(alertLayout);
+    alertLayout.addView(memberInput);
+    builder.setView(alertLayout);
 
-      builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-              database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/emailToUid")
-                      .addListenerForSingleValueEvent(new ValueEventListener() {
-                          @Override
-                          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                              String email = memberInput.getText().toString().replace('.', ',');
-                              if(!dataSnapshot.hasChild(email)){
-                                  createMessageDialog("No user with that email").show();
-                              }
-                              else{
-                                  String newUserID = (String) dataSnapshot.child(email).getValue();
-                                  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/"+roomID+"/"+newUserID).setValue(true);
-                                  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/"+newUserID+"/"+roomID).setValue(true);
-                                  createMessageDialog("User added").show();
-                              }
-                          }
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        String email = memberInput.getText().toString().replace('.', ',');
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/emailToUid/" + email)
+            .addListenerForSingleValueEvent(new ValueEventListener() {
+              @Override
+              public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.exists()) {
+                  Snackbar.make(toolbar, "No user with that email", Snackbar.LENGTH_LONG).show();
+                } else {
+                  String newUserID = (String) dataSnapshot.getValue();
+                  database.getReferenceFromUrl(
+                      "https://kanban-f611c.firebaseio.com/room_members/" + roomID + "/"
+                          + newUserID).setValue(true);
+                  database.getReferenceFromUrl(
+                      "https://kanban-f611c.firebaseio.com/user_rooms/" + newUserID + "/" + roomID)
+                      .setValue(true);
+                  Snackbar.make(toolbar, "User added", Snackbar.LENGTH_LONG).show();
+                }
+              }
 
-                          @Override
-                          public void onCancelled(@NonNull DatabaseError databaseError) {
+              @Override
+              public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                          }
-                      });
-          }
-      });
-      builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-              dialog.cancel();
-          }
-      });
-      final AlertDialog dialog = builder.create();
-      return dialog;
+              }
+            });
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    final AlertDialog dialog = builder.create();
+    return dialog;
   }
 
-  private AlertDialog createMessageDialog(String message){
-      AlertDialog.Builder builder = new AlertDialog.Builder(this);
-      builder.setMessage(message)
-              .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                  public void onClick(DialogInterface dialog, int id) {
-                  }
-              });
-      return builder.create();
+  private AlertDialog addBoardDialog() {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Add new board");
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final EditText boardInput = new EditText(this);
+    boardInput.setInputType(InputType.TYPE_CLASS_TEXT);
+
+    alertLayout.addView(boardInput);
+    builder.setView(alertLayout);
+
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        String boardName = boardInput.getText().toString();
+        String boardID = roomID + "_" + userID + "_" + System.currentTimeMillis();
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID + "/"
+            + boardID).setValue(boardName);
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + roomID + "/"
+            + boardID + "/room_id").setValue(boardName);
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    final AlertDialog dialog = builder.create();
+    return dialog;
+  }
+
+
+  private AlertDialog createMessageDialog(String message) {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setMessage(message)
+        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int id) {
+          }
+        });
+    return builder.create();
   }
 
   private AlertDialog createTaskDialog(final Task task) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
     alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -397,12 +449,12 @@ public class RoomActivity extends AppCompatActivity {
 
     final LinearLayout dueDateLayout = new LinearLayout(this);
     LinearLayout.LayoutParams dueDateLayoutParams = new LinearLayout.LayoutParams(
-    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     dueDateLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     dueDateLayout.setOrientation(LinearLayout.HORIZONTAL);
     dueDateLayout.setLayoutParams(dueDateLayoutParams);
 
-    final HashMap<String,Integer> dateTime = new HashMap<>();
+    final HashMap<String, Integer> dateTime = new HashMap<>();
     dateTime.put("year", -1);
     dateTime.put("month", -1);
     dateTime.put("day", -1);
@@ -414,31 +466,33 @@ public class RoomActivity extends AppCompatActivity {
     final TimePickerDialog timePickerDialog = new TimePickerDialog(this, new OnTimeSetListener() {
       @Override
       public void onTimeSet(TimePicker timePicker, int i, int i1) {
-         dateTime.put("hour", i);
-         dateTime.put("minute", i1);
+        dateTime.put("hour", i);
+        dateTime.put("minute", i1);
       }
     }, 23, 59, false);
 
     final DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
       @Override
       public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-          dateTime.put("year", i);
-          dateTime.put("month", i1);
-          dateTime.put("day", i2);
-          timePickerDialog.show();
+        dateTime.put("year", i);
+        dateTime.put("month", i1);
+        dateTime.put("day", i2);
+        timePickerDialog.show();
       }
-    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+    }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH));
 
     OnDismissListener dateDismiss = new OnDismissListener() {
       public void onDismiss(DialogInterface dialog) {
-        if(dateTime.get("year") == -1 || dateTime.get("month") == -1 || dateTime.get("day") == -1) {
+        if (dateTime.get("year") == -1 || dateTime.get("month") == -1
+            || dateTime.get("day") == -1) {
           dueDateCheckBox.setChecked(false);
         }
       }
     };
     OnDismissListener timeDismiss = new OnDismissListener() {
       public void onDismiss(DialogInterface dialog) {
-        if(dateTime.get("hour") == -1 || dateTime.get("minute") == -1) {
+        if (dateTime.get("hour") == -1 || dateTime.get("minute") == -1) {
           dueDateCheckBox.setChecked(false);
         }
       }
@@ -447,21 +501,20 @@ public class RoomActivity extends AppCompatActivity {
     timePickerDialog.setOnDismissListener(timeDismiss);
 
     dueDateCheckBox.setOnCheckedChangeListener(
-          new CompoundButton.OnCheckedChangeListener() {
-             @Override
-             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                 if(isChecked){
-                     datePickerDialog.show();
-                 }
-                 else{
-                   dateTime.put("year", -1);
-                   dateTime.put("month", -1);
-                   dateTime.put("day", -1);
-                   dateTime.put("hour", -1);
-                   dateTime.put("minute", -1);
-                 }
-             }
-         }
+        new CompoundButton.OnCheckedChangeListener() {
+          @Override
+          public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            if (isChecked) {
+              datePickerDialog.show();
+            } else {
+              dateTime.put("year", -1);
+              dateTime.put("month", -1);
+              dateTime.put("day", -1);
+              dateTime.put("hour", -1);
+              dateTime.put("minute", -1);
+            }
+          }
+        }
     );
     TextView dueDateLabel = new TextView(this);
     dueDateLabel.setText(" Due Date");
@@ -480,48 +533,43 @@ public class RoomActivity extends AppCompatActivity {
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
-          if(task != null){
-            task.setText(taskInput.getText().toString());
-            task.setPriority(priority.getProgress());
-            if(dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)){
-              task.setDueDate(dateTime);
-            }
-            else if (!dueDateCheckBox.isChecked()){
-              task.setDueDate(0);
-            }
-            addTaskToDatabase(task);
+        if (task != null) {
+          task.setText(taskInput.getText().toString());
+          task.setPriority(priority.getProgress());
+          if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
+            task.setDueDate(dateTime);
+          } else if (!dueDateCheckBox.isChecked()) {
+            task.setDueDate(0);
           }
-          else{
-              Task newTask;
-              if(dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)){
-                  newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3, dateTime);
-              }
-              else{
-                  newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3);
-              }
-            newTask.addTaker(userID);
-            addTaskToDatabase(newTask);
+          addTaskToDatabase(task);
+        } else {
+          Task newTask;
+          if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
+            newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3,
+                dateTime);
+          } else {
+            newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3);
           }
+          newTask.addTaker(userID);
+          addTaskToDatabase(newTask);
+        }
 
       }
     });
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
-          dialog.cancel();
+        dialog.cancel();
       }
     });
-      if(task != null){
-          builder.setTitle("Update Task");
-          taskInput.setText(task.getText());
-          priority.setProgress(task.getPriority());
-          if(task.getDueDate() != 0){
+    if (task != null) {
+        builder.setTitle("Update Task");
+        taskInput.setText(task.getText());
+        priority.setProgress(task.getPriority());
+        if (task.getDueDate() != 0) {
             dueDateCheckBox.setChecked(true);
-          }
-      }
-      else{
-          builder.setTitle("Add task");
-      }
+        }
+    }
     return builder.create();
   }
 
@@ -535,7 +583,8 @@ public class RoomActivity extends AppCompatActivity {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private static HashMap<String, HashMap<String,Task>> taskMapList;
+    private static HashMap<String, HashMap<String, Task>> taskMapList;
+    private static HashMap<String, String> boardNames;
     private static RoomActivity roomActivity;
 
     public PlaceholderFragment() {
@@ -546,10 +595,12 @@ public class RoomActivity extends AppCompatActivity {
      * number.
      */
     public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards,
-        HashMap<String, HashMap<String,Task>> initialTaskMapList, RoomActivity room) {
+        HashMap<String, HashMap<String, Task>> initialTaskMapList,
+        HashMap<String, String> initialBoardNames, RoomActivity room) {
       PlaceholderFragment fragment = new PlaceholderFragment();
       Bundle args = new Bundle();
       taskMapList = initialTaskMapList;
+      boardNames = initialBoardNames;
       args.putInt(ARG_SECTION_NUMBER, sectionNumber);
       args.putStringArrayList("boardList", boards);
       fragment.setArguments(args);
@@ -557,17 +608,19 @@ public class RoomActivity extends AppCompatActivity {
       return fragment;
     }
 
-    public static void updateTaskMapList(HashMap<String, HashMap<String, Task>> newTaskMapList) {
+    public static void updateTaskMapList(HashMap<String, HashMap<String, Task>> newTaskMapList,
+        HashMap<String, String> newBoardNames) {
       taskMapList = newTaskMapList;
+      boardNames = newBoardNames;
     }
 
     public static CardView addCard(LinearLayout parent, final Task task, Context context) {
       CardView newCard = new CardView(context);
       newCard.setOnClickListener(new OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              roomActivity.createTaskDialog(task).show();
-          }
+        @Override
+        public void onClick(View view) {
+          roomActivity.createTaskDialog(task).show();
+        }
       });
       TextView textView = new TextView(context);
       textView.setText(task.getText());
@@ -608,13 +661,14 @@ public class RoomActivity extends AppCompatActivity {
       View rootView = inflater.inflate(R.layout.fragment_room, container, false);
       Context context = rootView.getContext();
       int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
-      String boardName = getArguments().getStringArrayList("boardList").get(sectionNumber);
+      String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
+      String boardName = boardNames.get(boardID);
 
       TextView textView = (TextView) rootView.findViewById(R.id.section_label);
       textView.setText(boardName);
       LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
-      for (Task task : taskMapList.get(boardName).values()) {
+      for (Task task : taskMapList.get(boardID).values()) {
         addCard(parentLayout, task, context);
       }
 
@@ -650,7 +704,7 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position, boardList, boardTaskList, RoomActivity.this);
+      return PlaceholderFragment.newInstance(position, boardList, boardTaskList, boardNames, RoomActivity.this);
     }
 
     @Override
@@ -662,18 +716,8 @@ public class RoomActivity extends AppCompatActivity {
     }
 
     public void updateTasks(HashMap<String, HashMap<String, Task>> newTaskList) {
-      PlaceholderFragment.updateTaskMapList(newTaskList);
+      PlaceholderFragment.updateTaskMapList(newTaskList, boardNames);
       this.notifyDataSetChanged();
-//      FragmentTransaction tr = getFragmentManager().beginTransaction();
-//      tr.replace(R.id.container, PlaceholderFragment.this);
-//      tr.commit();
-//        Fragment currentFragment = this.getActivity().getFragmentManager().findFragmentById(R.id.container);
-//        if (currentFragment instanceof PlaceholderFragment) {
-//            FragmentTransaction fragTransaction =   (getActivity()).getFragmentManager().beginTransaction();
-//            fragTransaction.detach(currentFragment);
-//            fragTransaction.attach(currentFragment);
-//            fragTransaction.commit();}
-//        }
     }
   }
 }
