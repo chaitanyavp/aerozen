@@ -346,7 +346,7 @@ public class RoomActivity extends AppCompatActivity {
                           public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                               String email = memberInput.getText().toString().replace('.', ',');
                               if(!dataSnapshot.hasChild(email)){
-                                createMessageDialog("No user with that email").show();
+                                  createMessageDialog("No user with that email").show();
                               }
                               else{
                                   String newUserID = (String) dataSnapshot.child(email).getValue();
@@ -522,10 +522,7 @@ public class RoomActivity extends AppCompatActivity {
       else{
           builder.setTitle("Add task");
       }
-
-    final AlertDialog dialog = builder.create();
-
-    return dialog;
+    return builder.create();
   }
 
   /**
