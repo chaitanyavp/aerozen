@@ -17,6 +17,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
@@ -24,6 +26,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
@@ -563,12 +566,12 @@ public class RoomActivity extends AppCompatActivity {
       }
     });
     if (task != null) {
-        builder.setTitle("Update Task");
-        taskInput.setText(task.getText());
-        priority.setProgress(task.getPriority());
-        if (task.getDueDate() != 0) {
-            dueDateCheckBox.setChecked(true);
-        }
+      builder.setTitle("Update Task");
+      taskInput.setText(task.getText());
+      priority.setProgress(task.getPriority());
+      if (task.getDueDate() != 0) {
+        dueDateCheckBox.setChecked(true);
+      }
     }
     return builder.create();
   }
@@ -659,12 +662,12 @@ public class RoomActivity extends AppCompatActivity {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
       View rootView;
-        int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
+      int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
 
-      if (sectionNumber == 0){
-          rootView = inflater.inflate(R.layout.fragment_main, container, false);
+      if (sectionNumber == 0) {
+        rootView = inflater.inflate(R.layout.fragment_main, container, false);
         Context context = rootView.getContext();
-          LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+        LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 //        CardView newCard = new CardView(context);
 //        newCard.setOnClickListener(new OnClickListener() {
 //          @Override
@@ -705,21 +708,20 @@ public class RoomActivity extends AppCompatActivity {
 //        test3.setText("Change rooms");
 //          parentLayout.addView(test);
 //        newCard3.addView(test3);
-      }
-      else {
-          rootView = inflater.inflate(R.layout.fragment_room, container, false);
-          Context context = rootView.getContext();
-          sectionNumber--;
-          String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
-          String boardName = boardNames.get(boardID);
+      } else {
+        rootView = inflater.inflate(R.layout.fragment_room, container, false);
+        Context context = rootView.getContext();
+        sectionNumber--;
+        String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
+        String boardName = boardNames.get(boardID);
 
-          TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-          textView.setText(boardName);
-          LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+        TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+        textView.setText(boardName);
+        LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
-          for (Task task : taskMapList.get(boardID).values()) {
-              addCard(parentLayout, task, context);
-          }
+        for (Task task : taskMapList.get(boardID).values()) {
+          addCard(parentLayout, task, context);
+        }
       }
 
       return rootView;
@@ -742,7 +744,6 @@ public class RoomActivity extends AppCompatActivity {
 
     public SectionsPagerAdapter(FragmentManager fm) {
       super(fm);
-
     }
 
     @Override
@@ -754,7 +755,11 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      return PlaceholderFragment.newInstance(position, boardList, boardTaskList, boardNames, RoomActivity.this);
+      if(position == 0){
+        return new RecyclerListFragment();
+      }
+      return PlaceholderFragment
+          .newInstance(position, boardList, boardTaskList, boardNames, RoomActivity.this);
     }
 
     @Override
