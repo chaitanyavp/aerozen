@@ -156,6 +156,7 @@ public class RoomActivity extends AppCompatActivity {
     database = FirebaseDatabase.getInstance();
     boardList = new ArrayList<String>();
     boardChildListeners = new HashMap<String, ChildEventListener>();
+    boardOrderListeners = new HashMap<String, ValueEventListener>();
     boardTaskList = new HashMap<String, HashMap<String, Task>>();
     boardNames = new HashMap<String, String>();
     boardOrder = new HashMap<String, Integer>();
@@ -242,42 +243,44 @@ public class RoomActivity extends AppCompatActivity {
       }
     };
 
-//    ValueEventListener orderListener = new ValueEventListener() {
-//      @Override
-//      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//        boardOrder.put(boardName, (int) dataSnapshot.getValue());
-//        Collections.sort(boardList, new Comparator<String>(){
-//          @Override
-//          public int compare(final String s1, final String s2) {
-//            int p1 = boardOrder.get(s1);
-//            int p2 = boardOrder.get(s2);
-//            if(p1 < p2){
-//              return -1;
-//            }
-//            else if(p1==p2){
-//              return 0;
-//            }
-//            else{
-//              return 1;
-//            }
-//          }
-//        });
-//      }
-//
-//      @Override
-//      public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//      }
-//    };
+    ValueEventListener orderListener = new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        boardOrder.put(boardName, (int) (long) dataSnapshot.getValue());
+        Collections.sort(boardList, new Comparator<String>(){
+          @Override
+          public int compare(final String s1, final String s2) {
+            int p1 = boardOrder.get(s1);
+            int p2 = boardOrder.get(s2);
+            if(p1 < p2){
+              return -1;
+            }
+            else if(p1==p2){
+              return 0;
+            }
+            else{
+              return 1;
+            }
+          }
+        });
+        mSectionsPagerAdapter.notifyDataSetChanged();
+      }
 
-//    boardOrderListeners.put(boardName, orderListener);
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+
+      }
+    };
+
+    boardOrderListeners.put(boardName, orderListener);
+    boardOrder.put(boardName, 5);
     boardChildListeners.put(boardName, boardEventListener);
     database.getReferenceFromUrl(
         "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/tasks")
         .addChildEventListener(boardEventListener);
-//    database.getReferenceFromUrl(
-//        "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/order")
-//        .addValueEventListener(orderListener);
+    database.getReferenceFromUrl(
+        "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/order")
+        .addValueEventListener(orderListener);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
@@ -285,16 +288,16 @@ public class RoomActivity extends AppCompatActivity {
   private void removeBoard(String key) {
     boardList.remove(key);
     boardNames.remove(key);
-//    boardOrder.remove(key);
+    boardOrder.remove(key);
     ChildEventListener childEventListener = boardChildListeners.remove(key);
     database.getReferenceFromUrl(
         "https://kanban-f611c.firebaseio.com/boards/" + key + "/tasks")
         .removeEventListener(childEventListener);
 
-//    ValueEventListener orderListener = boardOrderListeners.remove(key);
-//    database.getReferenceFromUrl(
-//        "https://kanban-f611c.firebaseio.com/boards/" + key + "/order")
-//        .removeEventListener(orderListener);
+    ValueEventListener orderListener = boardOrderListeners.remove(key);
+    database.getReferenceFromUrl(
+        "https://kanban-f611c.firebaseio.com/boards/" + key + "/order")
+        .removeEventListener(orderListener);
 
     t.setText(t.getText() + "Removed" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
@@ -826,9 +829,9 @@ public class RoomActivity extends AppCompatActivity {
     @Override
     public int getCount() {
       if (boardList == null) {
-        return 0;
+        return 1;
       }
-      return boardList.size();
+      return boardList.size() + 1;
     }
 
     public void updateTasks(HashMap<String, HashMap<String, Task>> newTaskList) {
