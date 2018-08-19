@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.renderscript.Sampler.Value;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -58,6 +59,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
@@ -78,8 +81,10 @@ public class RoomActivity extends AppCompatActivity {
   private SectionsPagerAdapter mSectionsPagerAdapter;
   private ArrayList<String> boardList;
   private HashMap<String, ChildEventListener> boardChildListeners;
+  private HashMap<String, ValueEventListener> boardOrderListeners;
   private HashMap<String, HashMap<String, Task>> boardTaskList;
   private HashMap<String, String> boardNames;
+  private HashMap<String, Integer> boardOrder;
   private Calendar calendar;
   private int TEN_DP;
 
@@ -153,6 +158,7 @@ public class RoomActivity extends AppCompatActivity {
     boardChildListeners = new HashMap<String, ChildEventListener>();
     boardTaskList = new HashMap<String, HashMap<String, Task>>();
     boardNames = new HashMap<String, String>();
+    boardOrder = new HashMap<String, Integer>();
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
         .addChildEventListener(new ChildEventListener() {
@@ -235,35 +241,76 @@ public class RoomActivity extends AppCompatActivity {
 
       }
     };
+
+//    ValueEventListener orderListener = new ValueEventListener() {
+//      @Override
+//      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//        boardOrder.put(boardName, (int) dataSnapshot.getValue());
+//        Collections.sort(boardList, new Comparator<String>(){
+//          @Override
+//          public int compare(final String s1, final String s2) {
+//            int p1 = boardOrder.get(s1);
+//            int p2 = boardOrder.get(s2);
+//            if(p1 < p2){
+//              return -1;
+//            }
+//            else if(p1==p2){
+//              return 0;
+//            }
+//            else{
+//              return 1;
+//            }
+//          }
+//        });
+//      }
+//
+//      @Override
+//      public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//      }
+//    };
+
+//    boardOrderListeners.put(boardName, orderListener);
     boardChildListeners.put(boardName, boardEventListener);
     database.getReferenceFromUrl(
         "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/tasks")
         .addChildEventListener(boardEventListener);
+//    database.getReferenceFromUrl(
+//        "https://kanban-f611c.firebaseio.com/boards/" + boardName + "/order")
+//        .addValueEventListener(orderListener);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
   private void removeBoard(String key) {
     boardList.remove(key);
+    boardNames.remove(key);
+//    boardOrder.remove(key);
     ChildEventListener childEventListener = boardChildListeners.remove(key);
     database.getReferenceFromUrl(
         "https://kanban-f611c.firebaseio.com/boards/" + key + "/tasks")
         .removeEventListener(childEventListener);
+
+//    ValueEventListener orderListener = boardOrderListeners.remove(key);
+//    database.getReferenceFromUrl(
+//        "https://kanban-f611c.firebaseio.com/boards/" + key + "/order")
+//        .removeEventListener(orderListener);
+
     t.setText(t.getText() + "Removed" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
   private void moveBoard(String key, String prev) {
-    boardList.remove(key);
-    if (prev == null) {
-      boardList.add(0, key);
-    } else {
-      boardList.add(boardList.indexOf(prev) + 1, key);
-    }
-    t.setText(t.getText() + "moved" + key);
-    mSectionsPagerAdapter.updateTasks(boardTaskList);
-    mSectionsPagerAdapter.notifyDataSetChanged();
+//    boardList.remove(key);
+//    if (prev == null) {
+//      boardList.add(0, key);
+//    } else {
+//      boardList.add(boardList.indexOf(prev) + 1, key);
+//    }
+//    t.setText(t.getText() + "moved" + key);
+//    mSectionsPagerAdapter.updateTasks(boardTaskList);
+//    mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
   private void updateBoard(String key) {
@@ -411,10 +458,11 @@ public class RoomActivity extends AppCompatActivity {
       public void onClick(DialogInterface dialog, int which) {
         String boardName = boardInput.getText().toString();
         String boardID = roomID + "_" + userID + "_" + System.currentTimeMillis();
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/order").setValue(boardList.size());
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/room_id").setValue(roomID);
         database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID + "/"
             + boardID).setValue(boardName);
-        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + roomID + "/"
-            + boardID + "/room_id").setValue(boardName);
+
       }
     });
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
