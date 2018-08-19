@@ -8,20 +8,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
-  private static final String[] STRINGS = new String[]{
-      "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"
-  };
+  private final ArrayList<String> mItems;
+  private final HashMap<String, String> mNames;
 
-  private final ArrayList<String> mItems = new ArrayList<>();
-
-  public RecyclerListAdapter() {
-    mItems.addAll(Arrays.asList(STRINGS));
+  public RecyclerListAdapter(ArrayList<String> items, HashMap<String, String> names) {
+    mItems = items;
+    mNames = names;
   }
 
   @NonNull
@@ -33,7 +33,7 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
   @Override
   public void onBindViewHolder(BoardViewHolder holder, int position) {
-    holder.setName(mItems.get(position));
+    holder.setName(mNames.get(mItems.get(position)));
   }
 
   @Override

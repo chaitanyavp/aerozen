@@ -10,6 +10,9 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.google.firebase.database.FirebaseDatabase;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Paul Burke (ipaulpro)
@@ -31,9 +34,15 @@ public class RecyclerListFragment extends Fragment {
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    final RecyclerListAdapter adapter = new RecyclerListAdapter();
+    Bundle argBundle = getArguments();
+//    HashMap<String,String> names = (HashMap<String,String>) argBundle.getSerializable("names");
+//    ArrayList<String> list = (ArrayList<String>) argBundle.getSerializable("list");
+//    FirebaseDatabase db = (FirebaseDatabase) argBundle.getSerializable("database");
 
-    RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.boardlist_rec);
+    final RecyclerListAdapter adapter = new RecyclerListAdapter(((RoomActivity)getActivity()).getBoardList(),
+        ((RoomActivity)getActivity()).getBoardNames());
+
+    RecyclerView recyclerView = view.findViewById(R.id.boardlist_rec);
     recyclerView.setHasFixedSize(true);
     recyclerView.setAdapter(adapter);
     recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -71,7 +80,7 @@ public class RecyclerListFragment extends Fragment {
 
           @Override
           public boolean isItemViewSwipeEnabled() {
-            return true;
+            return false;
           }
         });
     mIth.attachToRecyclerView(recyclerView);

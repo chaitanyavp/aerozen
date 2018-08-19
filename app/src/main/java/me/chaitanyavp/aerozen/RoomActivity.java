@@ -576,6 +576,14 @@ public class RoomActivity extends AppCompatActivity {
     return builder.create();
   }
 
+  public ArrayList<String> getBoardList() {
+    return boardList;
+  }
+
+  public HashMap<String, String> getBoardNames() {
+    return boardNames;
+  }
+
   /**
    * A placeholder fragment containing a simple view.
    */
@@ -756,7 +764,12 @@ public class RoomActivity extends AppCompatActivity {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
       if(position == 0){
-        return new RecyclerListFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("names", boardNames);
+        bundle.putSerializable("list", boardList);
+        RecyclerListFragment frag = new RecyclerListFragment();
+        frag.setArguments(bundle);
+        return frag;
       }
       return PlaceholderFragment
           .newInstance(position, boardList, boardTaskList, boardNames, RoomActivity.this);
