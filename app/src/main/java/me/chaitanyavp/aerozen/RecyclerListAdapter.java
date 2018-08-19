@@ -33,7 +33,7 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
   @Override
   public void onBindViewHolder(BoardViewHolder holder, int position) {
-//    holder.textView.setText(mItems.get(position));
+    holder.setName(mItems.get(position));
   }
 
   @Override
