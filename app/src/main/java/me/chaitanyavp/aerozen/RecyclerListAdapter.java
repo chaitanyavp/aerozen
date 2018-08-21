@@ -14,16 +14,23 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
+import java.lang.Math;
+
 public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
   private final ArrayList<String> mItems;
   private final HashMap<String, String> mNames;
   private final RoomActivity roomActivity;
 
+  private int dragFrom;
+  private int dragTo;
+
   public RecyclerListAdapter(ArrayList<String> items, HashMap<String, String> names, RoomActivity room) {
     mItems = items;
     mNames = names;
     roomActivity = room;
+    dragFrom = -1;
+    dragTo = -1;
   }
 
   @NonNull
@@ -49,20 +56,35 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
   }
 
   public boolean onItemMove(int fromPosition, int toPosition) {
+    if (dragFrom == -1){
+      dragFrom = Math.min(fromPosition, toPosition);
+    }
     if (fromPosition < toPosition) {
       for (int i = fromPosition; i < toPosition; i++) {
         Collections.swap(mItems, i, i + 1);
-        roomActivity.setBoardPosition(mItems.get(i), i);
-        roomActivity.setBoardPosition(mItems.get(i+1), i+1);
       }
+      dragFrom = Math.min(dragFrom, fromPosition);
+      dragTo = Math.max(dragTo, toPosition);
     } else {
       for (int i = fromPosition; i > toPosition; i--) {
         Collections.swap(mItems, i, i - 1);
-        roomActivity.setBoardPosition(mItems.get(i), i);
-        roomActivity.setBoardPosition(mItems.get(i-1), i-1);
       }
+      dragFrom = Math.min(dragFrom, toPosition);
+      dragTo = Math.max(dragTo, fromPosition);
     }
     notifyItemMoved(fromPosition, toPosition);
     return true;
+  }
+
+  public void onDropped(){
+    if(dragFrom != -1 && dragTo != -1 && dragFrom != dragTo) {
+      for(int i = dragFrom; i <= dragTo; i++){
+        if(i < mItems.size()){
+          roomActivity.setBoardPosition(mItems.get(i), i);
+        }
+      }
+    }
+    dragFrom = -1;
+    dragTo = -1;
   }
 }

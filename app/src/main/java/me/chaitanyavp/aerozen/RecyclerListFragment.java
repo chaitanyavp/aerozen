@@ -75,6 +75,12 @@ public class RecyclerListFragment extends Fragment {
             return makeMovementFlags(dragFlags, swipeFlags);
           }
 
+        @Override
+        public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+            super.clearView(recyclerView, viewHolder);
+            adapter.onDropped();
+        }
+
           @Override
           public boolean isLongPressDragEnabled() {
             return true;
@@ -82,7 +88,7 @@ public class RecyclerListFragment extends Fragment {
 
           @Override
           public boolean isItemViewSwipeEnabled() {
-            return true;
+            return false;
           }
         });
     mIth.attachToRecyclerView(recyclerView);
