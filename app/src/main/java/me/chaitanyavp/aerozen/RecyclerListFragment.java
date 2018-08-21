@@ -30,6 +30,8 @@ public class RecyclerListFragment extends Fragment {
     return inflater.inflate(R.layout.fragment_main, container, false);
   }
 
+
+
   @Override
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
@@ -40,7 +42,7 @@ public class RecyclerListFragment extends Fragment {
 //    FirebaseDatabase db = (FirebaseDatabase) argBundle.getSerializable("database");
 
     final RecyclerListAdapter adapter = new RecyclerListAdapter(((RoomActivity)getActivity()).getBoardList(),
-        ((RoomActivity)getActivity()).getBoardNames());
+        ((RoomActivity)getActivity()).getBoardNames(), (RoomActivity)getActivity());
 
     RecyclerView recyclerView = view.findViewById(R.id.boardlist_rec);
     recyclerView.setHasFixedSize(true);
@@ -80,7 +82,7 @@ public class RecyclerListFragment extends Fragment {
 
           @Override
           public boolean isItemViewSwipeEnabled() {
-            return false;
+            return true;
           }
         });
     mIth.attachToRecyclerView(recyclerView);

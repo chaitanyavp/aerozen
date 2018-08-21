@@ -18,10 +18,12 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
   private final ArrayList<String> mItems;
   private final HashMap<String, String> mNames;
+  private final RoomActivity roomActivity;
 
-  public RecyclerListAdapter(ArrayList<String> items, HashMap<String, String> names) {
+  public RecyclerListAdapter(ArrayList<String> items, HashMap<String, String> names, RoomActivity room) {
     mItems = items;
     mNames = names;
+    roomActivity = room;
   }
 
   @NonNull
@@ -50,10 +52,14 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
     if (fromPosition < toPosition) {
       for (int i = fromPosition; i < toPosition; i++) {
         Collections.swap(mItems, i, i + 1);
+        roomActivity.setBoardPosition(mItems.get(i), i);
+        roomActivity.setBoardPosition(mItems.get(i+1), i+1);
       }
     } else {
       for (int i = fromPosition; i > toPosition; i--) {
         Collections.swap(mItems, i, i - 1);
+        roomActivity.setBoardPosition(mItems.get(i), i);
+        roomActivity.setBoardPosition(mItems.get(i-1), i-1);
       }
     }
     notifyItemMoved(fromPosition, toPosition);

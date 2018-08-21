@@ -304,6 +304,11 @@ public class RoomActivity extends AppCompatActivity {
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
+  public void setBoardPosition(String boardID, int newPos){
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
+            + boardID + "/order").setValue(newPos);
+  }
+
   private void moveBoard(String key, String prev) {
 //    boardList.remove(key);
 //    if (prev == null) {
