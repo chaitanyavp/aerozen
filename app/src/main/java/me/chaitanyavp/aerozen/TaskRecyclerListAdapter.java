@@ -12,20 +12,14 @@ import java.util.HashMap;
 
 public class TaskRecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
-  private final HashMap<String, Task> mTasks;
   private final ArrayList<String> mItems;
   private final RoomActivity roomActivity;
 
   private int dragFrom;
   private int dragTo;
 
-  public TaskRecyclerListAdapter(HashMap<String, Task> tasks, RoomActivity room) {
-    mTasks = tasks;
-//    mItems = new ArrayList<String>(tasks.keySet());
-    mItems = new ArrayList<String>();
-    for(String item : tasks.keySet()){
-      mItems.add(item);
-    }
+  public TaskRecyclerListAdapter(ArrayList<String> tasks, RoomActivity room) {
+    mItems = tasks;
     roomActivity = room;
     dragFrom = -1;
     dragTo = -1;
