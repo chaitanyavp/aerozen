@@ -147,7 +147,10 @@ public class RoomActivity extends AppCompatActivity {
     fab3.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        createTaskDialog(null).show();
+        int position = mViewPager.getCurrentItem() - 1;
+        if(position >= 0 && position < boardList.size()) {
+          createTaskDialog(null, boardList.get(position)).show();
+        }
       }
     });
     Intent intent = getIntent();
@@ -501,7 +504,7 @@ public class RoomActivity extends AppCompatActivity {
     return builder.create();
   }
 
-  private AlertDialog createTaskDialog(final Task task) {
+  private AlertDialog createTaskDialog(final Task task, final String boardName) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
@@ -589,11 +592,11 @@ public class RoomActivity extends AppCompatActivity {
 
     final EditText taskInput = new EditText(this);
     taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
-    final SeekBar priority = new SeekBar(this);
-    priority.setMax(100);
+    final SeekBar pointSlider = new SeekBar(this);
+    pointSlider.setMax(100);
     alertLayout.addView(taskInput);
     alertLayout.addView(dueDateLayout);
-    alertLayout.addView(priority);
+    alertLayout.addView(pointSlider);
     builder.setView(alertLayout);
 
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -601,7 +604,7 @@ public class RoomActivity extends AppCompatActivity {
       public void onClick(DialogInterface dialog, int which) {
         if (task != null) {
           task.setText(taskInput.getText().toString());
-          task.setPriority(priority.getProgress());
+          task.setPriority(pointSlider.getProgress());
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
             task.setDueDate(dateTime);
           } else if (!dueDateCheckBox.isChecked()) {
@@ -609,12 +612,13 @@ public class RoomActivity extends AppCompatActivity {
           }
           addTaskToDatabase(task);
         } else {
+          int order = boardTaskList.get(boardName).size();
           Task newTask;
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
-            newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3,
+            newTask = new Task(userID, taskInput.getText().toString(), order, pointSlider.getProgress(),
                 dateTime);
           } else {
-            newTask = new Task(userID, taskInput.getText().toString(), priority.getProgress(), 3);
+            newTask = new Task(userID, taskInput.getText().toString(), order, pointSlider.getProgress());
           }
           newTask.addTaker(userID);
           addTaskToDatabase(newTask);
@@ -631,7 +635,7 @@ public class RoomActivity extends AppCompatActivity {
     if (task != null) {
       builder.setTitle("Update Task");
       taskInput.setText(task.getText());
-      priority.setProgress(task.getPriority());
+      pointSlider.setProgress(task.getPriority());
       if (task.getDueDate() != 0) {
         dueDateCheckBox.setChecked(true);
       }
@@ -692,12 +696,13 @@ public class RoomActivity extends AppCompatActivity {
       boardNames = newBoardNames;
     }
 
-    public static CardView addCard(LinearLayout parent, final Task task, Context context) {
+    public static CardView addCard(LinearLayout parent, final Task task, final String boardName,
+        Context context) {
       CardView newCard = new CardView(context);
       newCard.setOnClickListener(new OnClickListener() {
         @Override
         public void onClick(View view) {
-          roomActivity.createTaskDialog(task).show();
+          roomActivity.createTaskDialog(task, boardName).show();
         }
       });
       TextView textView = new TextView(context);
@@ -795,7 +800,8 @@ public class RoomActivity extends AppCompatActivity {
         LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
         for (String taskName : taskMapList.get(boardID)) {
-          addCard(parentLayout, ((RoomActivity) getActivity()).getExistingTask(taskName), context);
+          addCard(parentLayout, ((RoomActivity) getActivity()).getExistingTask(taskName),
+              boardName, context);
         }
       }
 
