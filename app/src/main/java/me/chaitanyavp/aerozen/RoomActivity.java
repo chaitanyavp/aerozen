@@ -18,6 +18,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.Toolbar;
@@ -199,7 +200,6 @@ public class RoomActivity extends AppCompatActivity {
     } else {
       boardList.add(boardList.indexOf(prev) + 1, boardName);
     }
-    t.setText(t.getText() + "added" + boardName);
     boardTaskList.put(boardName, new HashMap<String, Task>());
     ChildEventListener boardEventListener = new ChildEventListener() {
       @Override
@@ -210,7 +210,6 @@ public class RoomActivity extends AppCompatActivity {
         task.setText((String) dataSnapshot.getValue());
         tasks.put(dataSnapshot.getKey(), task);
         Log.w("BAD", "task child added");
-        t.setText(t.getText() + " task child added");
         mSectionsPagerAdapter.updateTasks(boardTaskList);
       }
 
@@ -218,7 +217,6 @@ public class RoomActivity extends AppCompatActivity {
       public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         HashMap<String, Task> tasks = boardTaskList.get(boardName);
         tasks.get(dataSnapshot.getKey()).setText((String) dataSnapshot.getValue());
-        t.setText(t.getText() + " task child changed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
 
@@ -229,7 +227,6 @@ public class RoomActivity extends AppCompatActivity {
         Task removed = tasks.remove(dataSnapshot.getKey());
         removed.removeAllListeners(
             database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
-        t.setText(t.getText() + " task child removed");
         mSectionsPagerAdapter.notifyDataSetChanged();
       }
 
@@ -350,7 +347,7 @@ public class RoomActivity extends AppCompatActivity {
   }
 
   private void addTaskToDatabase(Task task) {
-    int position = mViewPager.getCurrentItem();
+    int position = mViewPager.getCurrentItem() - 1;
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
         + boardList.get(position) + "/").child("tasks").child(task.getId())
@@ -640,6 +637,10 @@ public class RoomActivity extends AppCompatActivity {
     return boardNames;
   }
 
+  public HashMap<String, HashMap<String, Task>> getBoardTaskList() {
+    return boardTaskList;
+  }
+
   /**
    * A placeholder fragment containing a simple view.
    */
@@ -789,6 +790,22 @@ public class RoomActivity extends AppCompatActivity {
       }
 
       return rootView;
+    }
+    @Override
+    public void onViewCreated(View view, Bundle bundle){
+      super.onViewCreated(view, bundle);
+      int position = getArguments().getInt(ARG_SECTION_NUMBER);
+      if (position != 0) {
+        String currBoard = ((RoomActivity) getActivity()).getBoardList().get(position-1);
+        final TaskRecyclerListAdapter adapter = new TaskRecyclerListAdapter(
+                ((RoomActivity) getActivity()).getBoardTaskList().get(currBoard),
+                (RoomActivity) getActivity());
+
+        RecyclerView recyclerView = view.findViewById(R.id.tasklist_rec);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+      }
     }
 
 //    @Override

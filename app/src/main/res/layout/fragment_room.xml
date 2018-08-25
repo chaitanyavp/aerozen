@@ -43,7 +43,10 @@
                     tools:layout_constraintLeft_creator="1"
                     tools:layout_constraintTop_creator="1" />
             </android.support.v7.widget.CardView>
-
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/tasklist_rec"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </LinearLayout>
     </ScrollView>
 
