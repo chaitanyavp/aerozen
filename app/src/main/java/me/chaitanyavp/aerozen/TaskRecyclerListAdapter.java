@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 
 public class TaskRecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
@@ -34,7 +33,7 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolde
 
   @Override
   public void onBindViewHolder(BoardViewHolder holder, int position) {
-    holder.setName(mItems.get(position));
+    holder.setName(roomActivity.getExistingTask(mItems.get(position)).getText());
   }
 
   @Override
@@ -72,7 +71,7 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolde
     if(dragFrom != -1 && dragTo != -1 && dragFrom != dragTo) {
       for(int i = dragFrom; i <= dragTo; i++){
         if(i < mItems.size()){
-          roomActivity.setBoardPosition(mItems.get(i), i);
+          roomActivity.setTaskPositionInDB(mItems.get(i), i);
         }
       }
     }

@@ -156,6 +156,7 @@ public class Task {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
         setPriority(Integer.parseInt(dataSnapshot.getValue().toString()));
+        adapter.updateOrder(getId());
         adapter.notifyDataSetChanged();
       }
       @Override

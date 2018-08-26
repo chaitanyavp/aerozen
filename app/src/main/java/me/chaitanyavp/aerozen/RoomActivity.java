@@ -322,6 +322,11 @@ public class RoomActivity extends AppCompatActivity {
             + boardID + "/order").setValue(newPos);
   }
 
+  public void setTaskPositionInDB(String taskID, int newPos){
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/task_priority/"
+        + taskID).setValue(newPos);
+  }
+
   private void moveBoard(String key, String prev) {
   }
 
@@ -821,6 +826,50 @@ public class RoomActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        ItemTouchHelper mIth = new ItemTouchHelper(
+            new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT) {
+
+              public boolean onMove(RecyclerView recyclerView,
+                  ViewHolder viewHolder, ViewHolder target) {
+                final int fromPos = viewHolder.getAdapterPosition();
+                final int toPos = target.getAdapterPosition();
+                // move item in `fromPos` to `toPos` in adapter.
+                adapter.onItemMove(fromPos, toPos);
+                return true;// true if moved, false otherwise
+              }
+
+              public void onSwiped(ViewHolder viewHolder, int direction) {
+                // remove from adapter
+                adapter.onItemDismiss(viewHolder.getAdapterPosition());
+              }
+
+              @Override
+              public int getMovementFlags(RecyclerView recyclerView,
+                  RecyclerView.ViewHolder viewHolder) {
+                int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+                int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+                return makeMovementFlags(dragFlags, swipeFlags);
+              }
+
+              @Override
+              public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                adapter.onDropped();
+              }
+
+              @Override
+              public boolean isLongPressDragEnabled() {
+                return true;
+              }
+
+              @Override
+              public boolean isItemViewSwipeEnabled() {
+                return false;
+              }
+            });
+        mIth.attachToRecyclerView(recyclerView);
       }
     }
 
@@ -871,6 +920,31 @@ public class RoomActivity extends AppCompatActivity {
       }
       return boardList.size() + 1;
     }
+
+    public void updateOrder(String taskID){
+      for(ArrayList<String> taskList : boardTaskList.values()){
+        if(taskList.contains(taskID)){
+          Collections.sort(taskList, new Comparator<String>(){
+            @Override
+            public int compare(final String s1, final String s2) {
+              int p1 = getExistingTask(s1).getPriority();
+              int p2 = getExistingTask(s2).getPriority();
+              return Integer.compare(p1, p2);
+            }
+          });
+        }
+      }
+      this.notifyDataSetChanged();
+    }
+
+//    public void updateAllOrder(){
+//      for(ArrayList<String> taskList : boardTaskList.values()){
+//        if(taskList.contains(taskID)){
+//
+//        }
+//      }
+//      this.notifyDataSetChanged();
+//    }
 
     public void updateTasks(HashMap<String, ArrayList<String>> newTaskList) {
       PlaceholderFragment.updateTaskMapList(newTaskList, boardNames);
