@@ -127,11 +127,14 @@ public class RoomActivity extends AppCompatActivity {
     );
 
 
+    final FloatingActionMenu fam = (FloatingActionMenu) findViewById(R.id.fab_main);
+
     FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
     fab2.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         addBoardDialog().show();
+        fam.close(true);
       }
     });
 
@@ -151,6 +154,7 @@ public class RoomActivity extends AppCompatActivity {
         if(position >= 0 && position < boardList.size()) {
           createTaskDialog(null, boardList.get(position)).show();
         }
+        fam.close(true);
       }
     });
     Intent intent = getIntent();
