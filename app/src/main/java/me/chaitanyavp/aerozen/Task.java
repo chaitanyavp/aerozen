@@ -118,6 +118,10 @@ public class Task {
     return points;
   }
 
+  public boolean hasTaker(String uid){
+    return takers.contains(uid);
+  }
+
   public void setPoints(int points) {
     this.points = points;
   }

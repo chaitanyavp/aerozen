@@ -669,6 +669,10 @@ public class RoomActivity extends AppCompatActivity {
     return boardList;
   }
 
+  public String getUserID(){
+    return userID;
+  }
+
   public HashMap<String, String> getBoardNames() {
     return boardNames;
   }

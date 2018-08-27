@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class TaskRecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
+public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskViewHolder> {
 
   private final ArrayList<String> mItems;
   private final RoomActivity roomActivity;
@@ -26,14 +26,14 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolde
 
   @NonNull
   @Override
-  public BoardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+  public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
     View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_task, parent, false);
-    return new BoardViewHolder(view);
+    return new TaskViewHolder(view);
   }
 
   @Override
-  public void onBindViewHolder(BoardViewHolder holder, int position) {
-    holder.setName(roomActivity.getExistingTask(mItems.get(position)).getText());
+  public void onBindViewHolder(TaskViewHolder holder, int position) {
+    holder.setTask(roomActivity.getExistingTask(mItems.get(position)), roomActivity.getUserID());
   }
 
   @Override
