@@ -154,6 +154,9 @@ public class RoomActivity extends AppCompatActivity {
         if(position >= 0 && position < boardList.size()) {
           createTaskDialog(null, boardList.get(position)).show();
         }
+        else{
+//          completeTask("1Z5zbcU1HQYHmh0sWuqekXQpoVu21533597360936", "1Z5zbcU1HQYHmh0sWuqekXQpoVu2_board1");
+        }
         fam.close(true);
       }
     });
@@ -401,6 +404,16 @@ public class RoomActivity extends AppCompatActivity {
     existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
     existingTask.addDueDateListener(taskRef, mSectionsPagerAdapter);
     return existingTask;
+  }
+
+  private void completeTask(String taskID, String boardName){
+    Task completedTask = allTasks.get(taskID);
+    if(completedTask != null) {
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
+          + "/completed_tasks/" + taskID).setValue(completedTask.getText());
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
+        + "/tasks/" + taskID).setValue(null);
+    }
   }
 
   private AlertDialog addRoomMemberDialog() {
