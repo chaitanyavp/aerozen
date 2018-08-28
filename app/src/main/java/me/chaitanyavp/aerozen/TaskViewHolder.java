@@ -32,7 +32,7 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
 
   public void setTask(Task task, String currentUser){
     completedBox.setText(task.getText());
-    points.setText(task.getPoints());
+    points.setText(task.getPoints() + " points");
     long epochDate = task.getDueDate();
     if(epochDate != 0) {
         Date date = new Date(epochDate);
