@@ -155,7 +155,7 @@ public class RoomActivity extends AppCompatActivity {
           createTaskDialog(null, boardList.get(position)).show();
         }
         else{
-//          completeTask("1Z5zbcU1HQYHmh0sWuqekXQpoVu21533597360936", "1Z5zbcU1HQYHmh0sWuqekXQpoVu2_board1");
+          completeTask("1Z5zbcU1HQYHmh0sWuqekXQpoVu21533597360936", "1Z5zbcU1HQYHmh0sWuqekXQpoVu2_board1");
         }
         fam.close(true);
       }
@@ -239,10 +239,9 @@ public class RoomActivity extends AppCompatActivity {
 
       @Override
       public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-        //TODO: Handle child removals (clear event listeners)
         ArrayList<String> tasks = boardTaskList.get(boardName);
         tasks.remove(dataSnapshot.getKey());
-        Task removed = allTasks.remove(dataSnapshot.getKey());
+        Task removed = allTasks.remove(dataSnapshot.getKey().toString());
         removed.removeAllListeners(
             database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
         mSectionsPagerAdapter.notifyDataSetChanged();
@@ -406,13 +405,17 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
-  private void completeTask(String taskID, String boardName){
+  public void completeTask(String taskID, String boardName){
+    if(boardName.equals("")){
+      int position = mViewPager.getCurrentItem() - 1;
+      boardName = boardList.get(position);
+    }
     Task completedTask = allTasks.get(taskID);
     if(completedTask != null) {
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
           + "/completed_tasks/" + taskID).setValue(completedTask.getText());
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
-        + "/tasks/" + taskID).setValue(null);
+  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
+      + "/tasks/" + taskID).setValue(null);
     }
   }
 

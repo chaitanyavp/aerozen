@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -30,7 +31,7 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
 
   }
 
-  public void setTask(Task task, String currentUser){
+  public void setTask(final Task task, String currentUser, final RoomActivity roomActivity){
     completedBox.setText(task.getText());
     points.setText(task.getPoints() + " points");
     long epochDate = task.getDueDate();
@@ -42,5 +43,11 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
     if(task.hasTaker(currentUser)){
         itemView.setBackgroundColor(Color.BLUE);
     }
+    completedBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+            roomActivity.completeTask(task.getId(), "");
+        }
+    });
   }
 }

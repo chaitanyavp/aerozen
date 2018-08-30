@@ -190,15 +190,15 @@ public class Task {
       eventListeners.remove("points");
     }
     if(eventListeners.containsKey("priority")) {
-      taskRef.child("task_priority").child(this.id).removeEventListener(eventListeners.get("points"));
+      taskRef.child("task_priority").child(this.id).removeEventListener(eventListeners.get("priority"));
       eventListeners.remove("priority");
     }
     if(eventListeners.containsKey("takers")) {
-      taskRef.child("task_takers").child(this.id).removeEventListener(eventListeners.get("points"));
+      taskRef.child("task_takers").child(this.id).removeEventListener(eventListeners.get("takers"));
       eventListeners.remove("takers");
     }
     if(eventListeners.containsKey("duedate")) {
-      taskRef.child("task_duedate").child(this.id).removeEventListener(eventListeners.get("points"));
+      taskRef.child("task_duedate").child(this.id).removeEventListener(eventListeners.get("duedate"));
       eventListeners.remove("duedate");
     }
   }
