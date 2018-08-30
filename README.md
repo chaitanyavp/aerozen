@@ -1,3 +1,3 @@
 # aerozen
 
-A Firebase-powered android app to help users collaborate on a group project on a Kanban-style board.
+A Firebase-powered Android app to help users collaborate on a group project with a Kanban-style board.
