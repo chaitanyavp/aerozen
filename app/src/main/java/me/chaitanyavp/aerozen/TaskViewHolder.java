@@ -3,6 +3,7 @@ package me.chaitanyavp.aerozen;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
@@ -17,6 +18,7 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
 
 //  private TextView name;
   private CheckBox completedBox;
+  private TextView taskText;
   private TextView points;
   private TextView duedate;
   private View mainView;
@@ -26,13 +28,14 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
 //    name = itemView.findViewById(R.id.section_label);
     mainView = itemView;
     completedBox = itemView.findViewById(R.id.checkBox);
+    taskText = itemView.findViewById(R.id.taskText);
     points = itemView.findViewById(R.id.points);
     duedate = itemView.findViewById(R.id.duedate);
 
   }
 
   public void setTask(final Task task, String currentUser, final RoomActivity roomActivity){
-    completedBox.setText(task.getText());
+    taskText.setText(task.getText());
     points.setText(task.getPoints() + " points");
     long epochDate = task.getDueDate();
     if(epochDate != 0) {
@@ -46,8 +49,15 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
     completedBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-            roomActivity.completeTask(task.getId(), "");
+        roomActivity.completeTask(task.getId(), "");
         }
+    });
+
+    itemView.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        roomActivity.createTaskDialog(task, "").show();
+      }
     });
   }
 }

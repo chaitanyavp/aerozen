@@ -529,7 +529,12 @@ public class RoomActivity extends AppCompatActivity {
     return builder.create();
   }
 
-  private AlertDialog createTaskDialog(final Task task, final String boardName) {
+  public AlertDialog createTaskDialog(final Task task, String boardToPut) {
+    if(boardToPut.equals("")){
+      int position = mViewPager.getCurrentItem() - 1;
+      boardToPut = boardList.get(position);
+    }
+    final String boardName = boardToPut;
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
