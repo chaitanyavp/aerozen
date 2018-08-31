@@ -633,14 +633,20 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         if (task != null) {
-          task.setText(taskInput.getText().toString());
-          task.setPriority(pointSlider.getProgress());
+          database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
+              + boardList.get(mViewPager.getCurrentItem() - 1) + "/").child("tasks").child(task.getId())
+              .setValue(taskInput.getText().toString());
+          DatabaseReference taskRef = database
+              .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+          taskRef.child("task_takers").child(task.getId()).setValue(task.getTakerString());
+          taskRef.child("task_points").child(task.getId()).setValue(pointSlider.getProgress());
+
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
-            task.setDueDate(dateTime);
+            taskRef.child("task_duedate").child(task.getId()).setValue(dateTime);
           } else if (!dueDateCheckBox.isChecked()) {
-            task.setDueDate(0);
+            taskRef.child("task_duedate").child(task.getId()).setValue(0);
           }
-          addTaskToDatabase(task);
+//          addTaskToDatabase(task);
         } else {
           int order = boardTaskList.get(boardName).size();
           Task newTask;

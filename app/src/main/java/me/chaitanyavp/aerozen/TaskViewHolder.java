@@ -49,7 +49,7 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
     completedBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-        roomActivity.completeTask(task.getId(), "");
+         roomActivity.completeTask(task.getId(), "");
         }
     });
 

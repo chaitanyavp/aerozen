@@ -174,7 +174,13 @@ public class Task {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
+        if(dataSnapshot.getValue() == null){
+          setPoints(0);
+        }
+        else{
+          setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
+        }
+
         adapter.notifyDataSetChanged();
       }
       @Override
