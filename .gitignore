@@ -40,3 +40,5 @@ Thumbs.db
 .externalNativeBuild
 
 app/src/main/res/values/secrets.xml
+
+.idea
