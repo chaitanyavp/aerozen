@@ -33,7 +33,7 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskViewHolder
 
   @Override
   public void onBindViewHolder(TaskViewHolder holder, int position) {
-    holder.setTask(roomActivity.getExistingTask(mItems.get(position)), roomActivity.getUserID());
+    holder.setTask(roomActivity.getExistingTask(mItems.get(position)), roomActivity.getUserID(), roomActivity);
   }
 
   @Override
