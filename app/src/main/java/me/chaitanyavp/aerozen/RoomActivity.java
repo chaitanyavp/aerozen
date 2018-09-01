@@ -88,6 +88,7 @@ public class RoomActivity extends AppCompatActivity {
   private HashMap<String, Task> allTasks;
   private HashMap<String, String> boardNames;
   private HashMap<String, Integer> boardOrder;
+  private HashMap<String, String> roomMembers;
   private Calendar calendar;
   private int TEN_DP;
 
@@ -126,7 +127,6 @@ public class RoomActivity extends AppCompatActivity {
         getResources().getDisplayMetrics()
     );
 
-
     final FloatingActionMenu fam = (FloatingActionMenu) findViewById(R.id.fab_main);
 
     FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
@@ -151,11 +151,11 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onClick(View view) {
         int position = mViewPager.getCurrentItem() - 1;
-        if(position >= 0 && position < boardList.size()) {
+        if (position >= 0 && position < boardList.size()) {
           createTaskDialog(null, boardList.get(position)).show();
-        }
-        else{
-          completeTask("1Z5zbcU1HQYHmh0sWuqekXQpoVu21533597360936", "1Z5zbcU1HQYHmh0sWuqekXQpoVu2_board1");
+        } else {
+          completeTask("1Z5zbcU1HQYHmh0sWuqekXQpoVu21533597360936",
+              "1Z5zbcU1HQYHmh0sWuqekXQpoVu2_board1");
         }
         fam.close(true);
       }
@@ -163,12 +163,14 @@ public class RoomActivity extends AppCompatActivity {
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
+    String userEmail = intent.getStringExtra("user_email");
 
     t = findViewById(R.id.test);
     t.setText("Started" + roomID);
 
     database = FirebaseDatabase.getInstance();
     boardList = new ArrayList<String>();
+
     boardChildListeners = new HashMap<String, ChildEventListener>();
     boardOrderListeners = new HashMap<String, ValueEventListener>();
 
@@ -177,6 +179,8 @@ public class RoomActivity extends AppCompatActivity {
 
     boardNames = new HashMap<String, String>();
     boardOrder = new HashMap<String, Integer>();
+    roomMembers = new HashMap<String, String>();
+    roomMembers.put(userID, userEmail);
 
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
         .addChildEventListener(new ChildEventListener() {
@@ -201,6 +205,54 @@ public class RoomActivity extends AppCompatActivity {
           @Override
           public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             moveBoard(dataSnapshot.getKey(), s);
+          }
+
+          @Override
+          public void onCancelled(@NonNull DatabaseError databaseError) {
+
+          }
+        });
+
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/" + roomID)
+        .addChildEventListener(new ChildEventListener() {
+          @Override
+          public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/uidToEmail/"
+                + dataSnapshot.getKey()).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                  @Override
+                  public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    roomMembers.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
+                  }
+                  @Override
+                  public void onCancelled(@NonNull DatabaseError databaseError) {
+                  }
+                });
+          }
+
+          @Override
+          public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/uidToEmail/"
+                + dataSnapshot.getKey()).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                  @Override
+                  public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    roomMembers.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
+                  }
+                  @Override
+                  public void onCancelled(@NonNull DatabaseError databaseError) {
+                  }
+                });
+          }
+
+          @Override
+          public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            roomMembers.remove(dataSnapshot.getKey());
+          }
+
+          @Override
+          public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
           }
 
           @Override
@@ -261,18 +313,16 @@ public class RoomActivity extends AppCompatActivity {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
         boardOrder.put(boardName, (int) (long) dataSnapshot.getValue());
-        Collections.sort(boardList, new Comparator<String>(){
+        Collections.sort(boardList, new Comparator<String>() {
           @Override
           public int compare(final String s1, final String s2) {
             int p1 = boardOrder.get(s1);
             int p2 = boardOrder.get(s2);
-            if(p1 < p2){
+            if (p1 < p2) {
               return -1;
-            }
-            else if(p1==p2){
+            } else if (p1 == p2) {
               return 0;
-            }
-            else{
+            } else {
               return 1;
             }
           }
@@ -314,7 +364,7 @@ public class RoomActivity extends AppCompatActivity {
         .removeEventListener(orderListener);
 
     ArrayList<String> removedTasks = boardTaskList.remove(key);
-    for(String taskName : removedTasks){
+    for (String taskName : removedTasks) {
       allTasks.remove(taskName);
     }
 
@@ -323,12 +373,12 @@ public class RoomActivity extends AppCompatActivity {
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
 
-  public void setBoardPosition(String boardID, int newPos){
+  public void setBoardPosition(String boardID, int newPos) {
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-            + boardID + "/order").setValue(newPos);
+        + boardID + "/order").setValue(newPos);
   }
 
-  public void setTaskPositionInDB(String taskID, int newPos){
+  public void setTaskPositionInDB(String taskID, int newPos) {
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/task_priority/"
         + taskID).setValue(newPos);
   }
@@ -364,11 +414,10 @@ public class RoomActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-  public Task getExistingTask(String name){
-    if(allTasks.containsKey(name)){
+  public Task getExistingTask(String name) {
+    if (allTasks.containsKey(name)) {
       return allTasks.get(name);
-    }
-    else{
+    } else {
       return null;
     }
   }
@@ -405,17 +454,17 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
-  public void completeTask(String taskID, String boardName){
-    if(boardName.equals("")){
+  public void completeTask(String taskID, String boardName) {
+    if (boardName.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
       boardName = boardList.get(position);
     }
     Task completedTask = allTasks.get(taskID);
-    if(completedTask != null) {
+    if (completedTask != null) {
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
           + "/completed_tasks/" + taskID).setValue(completedTask.getText());
-  database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
-      + "/tasks/" + taskID).setValue(null);
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
+          + "/tasks/" + taskID).setValue(null);
     }
   }
 
@@ -501,8 +550,11 @@ public class RoomActivity extends AppCompatActivity {
       public void onClick(DialogInterface dialog, int which) {
         String boardName = boardInput.getText().toString();
         String boardID = roomID + "_" + userID + "_" + System.currentTimeMillis();
-        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/order").setValue(boardList.size());
-        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/room_id").setValue(roomID);
+        database
+            .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/order")
+            .setValue(boardList.size());
+        database.getReferenceFromUrl(
+            "https://kanban-f611c.firebaseio.com/boards/" + boardID + "/room_id").setValue(roomID);
         database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID + "/"
             + boardID).setValue(boardName);
 
@@ -530,7 +582,7 @@ public class RoomActivity extends AppCompatActivity {
   }
 
   public AlertDialog createTaskDialog(final Task task, String boardToPut) {
-    if(boardToPut.equals("")){
+    if (boardToPut.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
       boardToPut = boardList.get(position);
     }
@@ -634,7 +686,8 @@ public class RoomActivity extends AppCompatActivity {
       public void onClick(DialogInterface dialog, int which) {
         if (task != null) {
           database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-              + boardList.get(mViewPager.getCurrentItem() - 1) + "/").child("tasks").child(task.getId())
+              + boardList.get(mViewPager.getCurrentItem() - 1) + "/").child("tasks")
+              .child(task.getId())
               .setValue(taskInput.getText().toString());
           DatabaseReference taskRef = database
               .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
@@ -651,10 +704,12 @@ public class RoomActivity extends AppCompatActivity {
           int order = boardTaskList.get(boardName).size();
           Task newTask;
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
-            newTask = new Task(userID, taskInput.getText().toString(), order, pointSlider.getProgress(),
+            newTask = new Task(userID, taskInput.getText().toString(), order,
+                pointSlider.getProgress(),
                 dateTime);
           } else {
-            newTask = new Task(userID, taskInput.getText().toString(), order, pointSlider.getProgress());
+            newTask = new Task(userID, taskInput.getText().toString(), order,
+                pointSlider.getProgress());
           }
           newTask.addTaker(userID);
           addTaskToDatabase(newTask);
@@ -683,7 +738,7 @@ public class RoomActivity extends AppCompatActivity {
     return boardList;
   }
 
-  public String getUserID(){
+  public String getUserID() {
     return userID;
   }
 
@@ -847,15 +902,16 @@ public class RoomActivity extends AppCompatActivity {
 
       return rootView;
     }
+
     @Override
-    public void onViewCreated(View view, Bundle bundle){
+    public void onViewCreated(View view, Bundle bundle) {
       super.onViewCreated(view, bundle);
       int position = getArguments().getInt(ARG_SECTION_NUMBER);
       if (position != 0) {
-        String currBoard = ((RoomActivity) getActivity()).getBoardList().get(position-1);
+        String currBoard = ((RoomActivity) getActivity()).getBoardList().get(position - 1);
         final TaskRecyclerListAdapter adapter = new TaskRecyclerListAdapter(
-                ((RoomActivity) getActivity()).getBoardTaskList().get(currBoard),
-                (RoomActivity) getActivity());
+            ((RoomActivity) getActivity()).getBoardTaskList().get(currBoard),
+            (RoomActivity) getActivity());
 
         RecyclerView recyclerView = view.findViewById(R.id.tasklist_rec);
         recyclerView.setHasFixedSize(true);
@@ -936,7 +992,7 @@ public class RoomActivity extends AppCompatActivity {
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
       // Return a PlaceholderFragment (defined as a static inner class below).
-      if(position == 0){
+      if (position == 0) {
         Bundle bundle = new Bundle();
         bundle.putSerializable("names", boardNames);
         bundle.putSerializable("list", boardList);
@@ -956,10 +1012,10 @@ public class RoomActivity extends AppCompatActivity {
       return boardList.size() + 1;
     }
 
-    public void updateOrder(String taskID){
-      for(ArrayList<String> taskList : boardTaskList.values()){
-        if(taskList.contains(taskID)){
-          Collections.sort(taskList, new Comparator<String>(){
+    public void updateOrder(String taskID) {
+      for (ArrayList<String> taskList : boardTaskList.values()) {
+        if (taskList.contains(taskID)) {
+          Collections.sort(taskList, new Comparator<String>() {
             @Override
             public int compare(final String s1, final String s2) {
               int p1 = getExistingTask(s1).getPriority();

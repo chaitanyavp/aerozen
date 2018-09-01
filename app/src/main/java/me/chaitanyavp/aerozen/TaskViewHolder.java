@@ -44,7 +44,7 @@ public class TaskViewHolder extends RecyclerView.ViewHolder {
         duedate.setText(dateFormat.format(date));
     }
     if(task.hasTaker(currentUser)){
-        itemView.setBackgroundColor(Color.BLUE);
+        taskText.setTextColor(Color.BLUE);
     }
     completedBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
         @Override

@@ -1,15 +1,22 @@
 package me.chaitanyavp.aerozen;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +37,47 @@ public class RecyclerListFragment extends Fragment {
     return inflater.inflate(R.layout.fragment_main, container, false);
   }
 
+  public CardView addCard(LinearLayout parent, final Task task, final String boardName,
+      Context context) {
+    CardView newCard = new CardView(context);
+    newCard.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        //TODO: member dialog
+      }
+    });
+    TextView textView = new TextView(context);
+    textView.setText(task.getText());
+    newCard.addView(textView);
+    parent.addView(newCard);
 
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+    );
+    Resources r = context.getResources();
+    final int TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        r.getDisplayMetrics()
+    );
+    params.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    newCard.setLayoutParams(params);
+
+    CardView.LayoutParams cardParams = new CardView.LayoutParams(
+        CardView.LayoutParams.WRAP_CONTENT,
+        CardView.LayoutParams.WRAP_CONTENT
+    );
+    final int SIXTEEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        16,
+        r.getDisplayMetrics()
+    );
+    cardParams.setMargins(SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP);
+    textView.setLayoutParams(cardParams);
+
+    return newCard;
+  }
 
   @Override
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {

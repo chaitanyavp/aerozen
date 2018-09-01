@@ -118,6 +118,7 @@ public class WelcomeActivity extends AppCompatActivity {
     Intent intent = new Intent(this, RoomActivity.class);
     intent.putExtra("room_id", roomKey);
     intent.putExtra("user_id", user.getUid());
+    intent.putExtra("user_email", user.getEmail());
     startActivity(intent);
   }
 
@@ -141,6 +142,7 @@ public class WelcomeActivity extends AppCompatActivity {
   private void createUser(){
     final String formattedEmail = user.getEmail().replace('.', ',');
     database.getReference().child("emailToUid").child(formattedEmail).setValue(user.getUid());
+    database.getReference().child("uidToEmail").child(user.getUid()).setValue(user.getEmail());
   }
 
   @Override
