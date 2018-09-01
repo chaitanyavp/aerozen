@@ -3,7 +3,6 @@ package me.chaitanyavp.aerozen;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
-import android.app.FragmentTransaction;
 import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
@@ -11,7 +10,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.renderscript.Sampler.Value;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -60,12 +58,9 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Collections;
 import java.util.Comparator;
 //import java.util.TreeMap;
@@ -90,12 +85,13 @@ public class RoomActivity extends AppCompatActivity {
   private HashMap<String, Integer> boardOrder;
   private HashMap<String, String> roomMembers;
   private Calendar calendar;
-  private int TEN_DP;
+  public int TEN_DP;
 
   /**
    * The {@link ViewPager} that will host the section contents.
    */
   private ViewPager mViewPager;
+
   private FirebaseDatabase database;
   private String roomID;
   private String userID;
@@ -114,6 +110,12 @@ public class RoomActivity extends AppCompatActivity {
     // primary sections of the activity.
     mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
+    TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
+
     // Set up the ViewPager with the sections adapter.
     mViewPager = (ViewPager) findViewById(R.id.container);
     mViewPager.setAdapter(mSectionsPagerAdapter);
@@ -121,11 +123,6 @@ public class RoomActivity extends AppCompatActivity {
     calendar = Calendar.getInstance();
     System.out.println("VERY GOOD 1");
     Log.w("BAD", "we have began");
-    TEN_DP = (int) TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        10,
-        getResources().getDisplayMetrics()
-    );
 
     final FloatingActionMenu fam = (FloatingActionMenu) findViewById(R.id.fab_main);
 
@@ -419,6 +416,10 @@ public class RoomActivity extends AppCompatActivity {
     } else {
       return null;
     }
+  }
+
+  public DatabaseReference getRefFromUrl(String url) {
+    return database.getReferenceFromUrl(url);
   }
 
   private void addTaskToDatabase(Task task) {
@@ -999,7 +1000,7 @@ public class RoomActivity extends AppCompatActivity {
         Bundle bundle = new Bundle();
         bundle.putSerializable("names", boardNames);
         bundle.putSerializable("list", boardList);
-        RecyclerListFragment frag = new RecyclerListFragment();
+        MainPageFragment frag = new MainPageFragment();
         frag.setArguments(bundle);
         return frag;
       }

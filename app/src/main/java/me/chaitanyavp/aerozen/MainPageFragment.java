@@ -1,8 +1,11 @@
 package me.chaitanyavp.aerozen;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
@@ -10,13 +13,20 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.InputType;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,11 +34,11 @@ import java.util.HashMap;
 /**
  * @author Paul Burke (ipaulpro)
  */
-public class RecyclerListFragment extends Fragment {
+public class MainPageFragment extends Fragment {
 
   private ItemTouchHelper mItemTouchHelper;
 
-  public RecyclerListFragment() {
+  public MainPageFragment() {
   }
 
   @Nullable
@@ -42,12 +52,13 @@ public class RecyclerListFragment extends Fragment {
     return rootView;
   }
 
-  public CardView addCard(LinearLayout parent, final String memberName, Context context) {
+  private CardView addCard(LinearLayout parent, final String memberName, final Context context) {
     CardView newCard = new CardView(context);
     newCard.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
         //TODO: member dialog
+        createMemberDialog(memberName, context).show();
       }
     });
     TextView textView = new TextView(context);
@@ -83,6 +94,81 @@ public class RecyclerListFragment extends Fragment {
     return newCard;
   }
 
+  private AlertDialog createMemberDialog(String memberID,
+      final Context context) {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+    final LinearLayout alertLayout = new LinearLayout(context);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+    int TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
+    RoomActivity roomActivity = ((RoomActivity) getActivity());
+
+    builder.setTitle(memberID);
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final HashMap<String, TextView> completedTasks = new HashMap<>();
+
+    for(String boardID : roomActivity.getBoardList()) {
+      final DatabaseReference dataRef =
+          roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/completed_tasks");
+      dataRef.addChildEventListener(new ChildEventListener(){
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+          TextView t = new TextView(context);
+          t.setText(dataSnapshot.getValue().toString());
+          alertLayout.addView(t);
+          completedTasks.put(dataSnapshot.getKey(), t);
+        }
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+          completedTasks.get(dataSnapshot.getKey()).setText(dataSnapshot.getValue().toString());
+        }
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+          TextView t = completedTasks.remove(dataSnapshot.getKey());
+          alertLayout.removeView(t);
+        }
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+      });
+      final TextView taskText = new TextView(context);
+      taskText.setText(memberID);
+      alertLayout.addView(taskText);
+    }
+
+    builder.setView(alertLayout);
+
+//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//      @Override
+//      public void onClick(DialogInterface dialog, int which) {
+//
+//      }
+//    });
+    builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    return builder.create();
+  }
+
   @Override
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
@@ -100,7 +186,7 @@ public class RecyclerListFragment extends Fragment {
     recyclerView.setAdapter(adapter);
     recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-    ItemTouchHelper mIth = new ItemTouchHelper(
+    mItemTouchHelper = new ItemTouchHelper(
         new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
             ItemTouchHelper.LEFT) {
 
@@ -142,7 +228,7 @@ public class RecyclerListFragment extends Fragment {
             return false;
           }
         });
-    mIth.attachToRecyclerView(recyclerView);
+    mItemTouchHelper.attachToRecyclerView(recyclerView);
   }
 
 }
