@@ -830,19 +830,19 @@ public class RoomActivity extends AppCompatActivity {
 //        newCard3.addView(test3);
       } else {
         rootView = inflater.inflate(R.layout.fragment_room, container, false);
-        Context context = rootView.getContext();
+//        Context context = rootView.getContext();
         sectionNumber--;
         String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
         String boardName = boardNames.get(boardID);
 
         TextView textView = (TextView) rootView.findViewById(R.id.section_label);
         textView.setText(boardName);
-        LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
+//        LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
-        for (String taskName : taskMapList.get(boardID)) {
-          addCard(parentLayout, ((RoomActivity) getActivity()).getExistingTask(taskName),
-              boardName, context);
-        }
+//        for (String taskName : taskMapList.get(boardID)) {
+//          addCard(parentLayout, ((RoomActivity) getActivity()).getExistingTask(taskName),
+//              boardName, context);
+//        }
       }
 
       return rootView;
