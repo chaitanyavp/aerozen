@@ -34,11 +34,15 @@ public class RecyclerListFragment extends Fragment {
   @Nullable
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_main, container, false);
+    View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+    HashMap<String, String> roomMembers = ((RoomActivity) getActivity()).getRoomMembers();
+    for (String user : roomMembers.values()){
+      addCard((LinearLayout) rootView.findViewById(R.id.member_layout), user, rootView.getContext());
+    }
+    return rootView;
   }
 
-  public CardView addCard(LinearLayout parent, final Task task, final String boardName,
-      Context context) {
+  public CardView addCard(LinearLayout parent, final String memberName, Context context) {
     CardView newCard = new CardView(context);
     newCard.setOnClickListener(new OnClickListener() {
       @Override
@@ -47,7 +51,7 @@ public class RecyclerListFragment extends Fragment {
       }
     });
     TextView textView = new TextView(context);
-    textView.setText(task.getText());
+    textView.setText(memberName);
     newCard.addView(textView);
     parent.addView(newCard);
 

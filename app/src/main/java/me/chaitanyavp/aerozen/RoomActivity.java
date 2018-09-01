@@ -189,24 +189,20 @@ public class RoomActivity extends AppCompatActivity {
             addBoard(dataSnapshot.getKey(), s);
             boardNames.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
           }
-
           @Override
           public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             updateBoard(dataSnapshot.getKey());
             boardNames.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
           }
-
           @Override
           public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
             removeBoard(dataSnapshot.getKey());
             boardNames.remove(dataSnapshot.getKey());
           }
-
           @Override
           public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             moveBoard(dataSnapshot.getKey(), s);
           }
-
           @Override
           public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -223,6 +219,7 @@ public class RoomActivity extends AppCompatActivity {
                   @Override
                   public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     roomMembers.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
+                    mSectionsPagerAdapter.notifyDataSetChanged();
                   }
                   @Override
                   public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -238,6 +235,7 @@ public class RoomActivity extends AppCompatActivity {
                   @Override
                   public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     roomMembers.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
+                    mSectionsPagerAdapter.notifyDataSetChanged();
                   }
                   @Override
                   public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -248,6 +246,7 @@ public class RoomActivity extends AppCompatActivity {
           @Override
           public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
             roomMembers.remove(dataSnapshot.getKey());
+            mSectionsPagerAdapter.notifyDataSetChanged();
           }
 
           @Override
@@ -736,6 +735,10 @@ public class RoomActivity extends AppCompatActivity {
 
   public ArrayList<String> getBoardList() {
     return boardList;
+  }
+
+  public HashMap<String, String> getRoomMembers() {
+    return roomMembers;
   }
 
   public String getUserID() {
