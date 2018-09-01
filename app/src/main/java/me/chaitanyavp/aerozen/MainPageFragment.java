@@ -28,6 +28,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -46,19 +47,21 @@ public class MainPageFragment extends Fragment {
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     View rootView = inflater.inflate(R.layout.fragment_main, container, false);
     HashMap<String, String> roomMembers = ((RoomActivity) getActivity()).getRoomMembers();
-    for (String user : roomMembers.values()){
-      addCard((LinearLayout) rootView.findViewById(R.id.member_layout), user, rootView.getContext());
+    for (String memberID : roomMembers.keySet()){
+      addCard((LinearLayout) rootView.findViewById(R.id.member_layout), memberID,
+          roomMembers.get(memberID), rootView.getContext());
     }
     return rootView;
   }
 
-  private CardView addCard(LinearLayout parent, final String memberName, final Context context) {
+  private CardView addCard(LinearLayout parent, final String memberID, final String memberName,
+      final Context context) {
     CardView newCard = new CardView(context);
     newCard.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
         //TODO: member dialog
-        createMemberDialog(memberName, context).show();
+        createMemberDialog(memberID, memberName, context).show();
       }
     });
     TextView textView = new TextView(context);
@@ -94,7 +97,7 @@ public class MainPageFragment extends Fragment {
     return newCard;
   }
 
-  private AlertDialog createMemberDialog(String memberID,
+  private AlertDialog createMemberDialog(final String memberID, final String memberName,
       final Context context) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(context);
     final LinearLayout alertLayout = new LinearLayout(context);
@@ -106,9 +109,9 @@ public class MainPageFragment extends Fragment {
         10,
         getResources().getDisplayMetrics()
     );
-    RoomActivity roomActivity = ((RoomActivity) getActivity());
+    final RoomActivity roomActivity = ((RoomActivity) getActivity());
 
-    builder.setTitle(memberID);
+    builder.setTitle(memberName);
 
     alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -124,14 +127,33 @@ public class MainPageFragment extends Fragment {
       dataRef.addChildEventListener(new ChildEventListener(){
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          TextView t = new TextView(context);
-          t.setText(dataSnapshot.getValue().toString());
-          alertLayout.addView(t);
-          completedTasks.put(dataSnapshot.getKey(), t);
+          final String taskID = dataSnapshot.getKey();
+          final String taskText = dataSnapshot.getValue().toString();
+          roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/task_takers/"
+              + dataSnapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot takerSnapshot) {
+              for(String taker : takerSnapshot.getValue().toString().split(" ")){
+                if(taker.equals(memberID)){
+                  TextView t = new TextView(context);
+                  t.setText(taskText);
+                  alertLayout.addView(t);
+                  completedTasks.put(taskID, t);
+                  break;
+                }
+              }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+          });
         }
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          completedTasks.get(dataSnapshot.getKey()).setText(dataSnapshot.getValue().toString());
+          if(completedTasks.containsKey(dataSnapshot.getKey())) {
+            completedTasks.get(dataSnapshot.getKey()).setText(dataSnapshot.getValue().toString());
+          }
         }
         @Override
         public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
@@ -147,9 +169,6 @@ public class MainPageFragment extends Fragment {
 
         }
       });
-      final TextView taskText = new TextView(context);
-      taskText.setText(memberID);
-      alertLayout.addView(taskText);
     }
 
     builder.setView(alertLayout);
