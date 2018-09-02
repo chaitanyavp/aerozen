@@ -38,8 +38,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.TimePicker;
 import com.github.clans.fab.FloatingActionButton;
@@ -581,6 +583,60 @@ public class RoomActivity extends AppCompatActivity {
     return builder.create();
   }
 
+  public AlertDialog createMemberSelectDialog(final Task task, final ArrayList<String> output) {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+    builder.setTitle("Select takers for this task");
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final HashMap<String, Boolean> membersSelected = new HashMap<>();
+
+    for(final String memberID : roomMembers.keySet()) {
+      final CheckBox memberCheckBox = new CheckBox(this);
+      memberCheckBox.setText(roomMembers.get(memberID));
+      memberCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+          if(b){
+            membersSelected.put(memberID, true);
+          }
+          else{
+            membersSelected.remove(memberID);
+          }
+        }
+      });
+      if(task != null) {
+        memberCheckBox.setChecked(task.hasTaker(memberID));
+      }
+      alertLayout.addView(memberCheckBox);
+    }
+
+    builder.setView(alertLayout);
+
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+        output.removeAll(output);
+        output.addAll(membersSelected.keySet());
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+      }
+    });
+
+    return builder.create();
+  }
+
   public AlertDialog createTaskDialog(final Task task, String boardToPut) {
     if (boardToPut.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
@@ -676,30 +732,43 @@ public class RoomActivity extends AppCompatActivity {
     taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
     final SeekBar pointSlider = new SeekBar(this);
     pointSlider.setMax(100);
+
+    final ArrayList<String> takers = new ArrayList<>();
+    final Button selectTakerButton = new Button(this);
+    selectTakerButton.setText("Select takers");
+    selectTakerButton.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        createMemberSelectDialog(task, takers).show();
+      }
+    });
     alertLayout.addView(taskInput);
     alertLayout.addView(dueDateLayout);
     alertLayout.addView(pointSlider);
+    alertLayout.addView(selectTakerButton);
     builder.setView(alertLayout);
 
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
+
         if (task != null) {
           database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
               + boardList.get(mViewPager.getCurrentItem() - 1) + "/").child("tasks")
               .child(task.getId())
               .setValue(taskInput.getText().toString());
+          String takerString = android.text.TextUtils.join(" ", takers);
           DatabaseReference taskRef = database
               .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
           taskRef.child("task_takers").child(task.getId()).setValue(task.getTakerString());
           taskRef.child("task_points").child(task.getId()).setValue(pointSlider.getProgress());
+          taskRef.child("task_takers").child(task.getId()).setValue(takerString);
 
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
             taskRef.child("task_duedate").child(task.getId()).setValue(dateTime);
           } else if (!dueDateCheckBox.isChecked()) {
             taskRef.child("task_duedate").child(task.getId()).setValue(0);
           }
-//          addTaskToDatabase(task);
         } else {
           int order = boardTaskList.get(boardName).size();
           Task newTask;
@@ -711,8 +780,10 @@ public class RoomActivity extends AppCompatActivity {
             newTask = new Task(userID, taskInput.getText().toString(), order,
                 pointSlider.getProgress());
           }
-          newTask.addTaker(userID);
-          addTaskToDatabase(newTask);
+          for(String taker : takers) {
+            newTask.addTaker(taker);
+          }
+          addTaskToDatabase(newTask); //TODO: Phase out this method, remove setters from task object.
         }
 
       }
@@ -757,7 +828,7 @@ public class RoomActivity extends AppCompatActivity {
   /**
    * A placeholder fragment containing a simple view.
    */
-  public static class PlaceholderFragment extends Fragment {
+  public static class BoardFragment extends Fragment {
 
     /**
      * The fragment argument representing the section number for this
@@ -768,17 +839,17 @@ public class RoomActivity extends AppCompatActivity {
     private static HashMap<String, String> boardNames;
     private static RoomActivity roomActivity;
 
-    public PlaceholderFragment() {
+    public BoardFragment() {
     }
 
     /**
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static PlaceholderFragment newInstance(int sectionNumber, ArrayList<String> boards,
+    public static BoardFragment newInstance(int sectionNumber, ArrayList<String> boards,
         HashMap<String, ArrayList<String>> initialTaskMapList,
         HashMap<String, String> initialBoardNames, RoomActivity room) {
-      PlaceholderFragment fragment = new PlaceholderFragment();
+      BoardFragment fragment = new BoardFragment();
       Bundle args = new Bundle();
       taskMapList = initialTaskMapList;
       boardNames = initialBoardNames;
@@ -995,7 +1066,7 @@ public class RoomActivity extends AppCompatActivity {
     @Override
     public Fragment getItem(int position) {
       // getItem is called to instantiate the fragment for the given page.
-      // Return a PlaceholderFragment (defined as a static inner class below).
+      // Return a BoardFragment (defined as a static inner class below).
       if (position == 0) {
         Bundle bundle = new Bundle();
         bundle.putSerializable("names", boardNames);
@@ -1004,7 +1075,7 @@ public class RoomActivity extends AppCompatActivity {
         frag.setArguments(bundle);
         return frag;
       }
-      return PlaceholderFragment
+      return BoardFragment
           .newInstance(position, boardList, boardTaskList, boardNames, RoomActivity.this);
     }
 
@@ -1042,7 +1113,7 @@ public class RoomActivity extends AppCompatActivity {
 //    }
 
     public void updateTasks(HashMap<String, ArrayList<String>> newTaskList) {
-      PlaceholderFragment.updateTaskMapList(newTaskList, boardNames);
+      BoardFragment.updateTaskMapList(newTaskList, boardNames);
       this.notifyDataSetChanged();
     }
   }
