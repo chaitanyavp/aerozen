@@ -34,16 +34,21 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TimePicker;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -63,6 +68,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.Comparator;
@@ -639,6 +645,59 @@ public class RoomActivity extends AppCompatActivity {
     return builder.create();
   }
 
+//  public AlertDialog createBoardSelectDialog(final String initialBoard, final
+//  HashMap<String, String> output) {
+//    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//    final LinearLayout alertLayout = new LinearLayout(this);
+//    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+//
+//    builder.setTitle("Select board for this task");
+//
+//    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+//    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+//    alertLayout.setOrientation(LinearLayout.VERTICAL);
+//    alertLayout.setLayoutParams(alertLayoutParams);
+//    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+//
+//    final HashMap<String,String> selectedBoard = new HashMap<>();
+//
+//    for(final String board : boardList) {
+//      final CheckBox memberCheckBox = new CheckBox(this);
+//      memberCheckBox.setText(boardNames.get(board));
+//      memberCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+//        @Override
+//        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//          if(b){
+//            selectedBoard.put("board", board);
+//          }
+//        }
+//      });
+//      if(board.equals(initialBoard)){
+//        memberCheckBox.setChecked(true);
+//      }
+//      alertLayout.addView(memberCheckBox);
+//    }
+//
+//    builder.setView(alertLayout);
+//
+//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+//      @Override
+//      public void onClick(DialogInterface dialogInterface, int i) {
+//        if(selectedBoard.containsKey("board")) {
+//          output.put("board", selectedBoard.get("board"));
+//        }
+//      }
+//    });
+//    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+//      @Override
+//      public void onClick(DialogInterface dialogInterface, int i) {
+//      }
+//    });
+//
+//    return builder.create();
+//  }
+
   public AlertDialog createTaskDialog(final Task task, String boardToPut) {
     if (boardToPut.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
@@ -734,6 +793,37 @@ public class RoomActivity extends AppCompatActivity {
     taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
     final SeekBar pointSlider = new SeekBar(this);
     pointSlider.setMax(100);
+    final Spinner spinner = new Spinner(this);
+
+    final ArrayList<String> boardListByNames = new ArrayList<>();
+    for(String board : boardList){
+      boardListByNames.add(boardNames.get(board));
+    }
+    ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+        android.R.layout.simple_spinner_item, boardListByNames);
+    spinner.setAdapter(adapter);
+    spinner.setOnTouchListener(new View.OnTouchListener() {
+      @Override
+      public boolean onTouch(View view, MotionEvent motionEvent) {
+        boardListByNames.clear();
+        for(String board : boardList){
+          boardListByNames.add(boardNames.get(board));
+        }
+        return false;
+      }
+    });
+    spinner.setSelection(boardList.indexOf(boardName));
+    final HashMap<String,String> selectedBoard = new HashMap<>();
+    selectedBoard.put("board", boardName);
+    spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+        selectedBoard.put("board", boardList.get(position));
+      }
+      @Override
+      public void onNothingSelected(AdapterView<?> parentView) {}
+
+    });
 
     final ArrayList<String> takers = new ArrayList<>();
     final Button selectTakerButton = new Button(this);
@@ -747,6 +837,7 @@ public class RoomActivity extends AppCompatActivity {
     alertLayout.addView(taskInput);
     alertLayout.addView(dueDateLayout);
     alertLayout.addView(pointSlider);
+    alertLayout.addView(spinner);
     alertLayout.addView(selectTakerButton);
     builder.setView(alertLayout);
 
@@ -755,8 +846,14 @@ public class RoomActivity extends AppCompatActivity {
       public void onClick(DialogInterface dialog, int which) {
 
         if (task != null) {
+          if(!selectedBoard.get("board").equals(boardName)){
+            database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
+                + boardName + "/").child("tasks")
+                .child(task.getId())
+                .setValue(null);
+          }
           database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-              + boardName + "/").child("tasks")
+              + selectedBoard.get("board") + "/").child("tasks")
               .child(task.getId())
               .setValue(taskInput.getText().toString());
           String takerString = android.text.TextUtils.join(" ", takers);
@@ -772,7 +869,7 @@ public class RoomActivity extends AppCompatActivity {
             taskRef.child("task_duedate").child(task.getId()).setValue(0);
           }
         } else {
-          int order = boardTaskList.get(boardName).size();
+          int order = boardTaskList.get(selectedBoard.get("board")).size();
           Task newTask;
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
             newTask = new Task(userID, taskInput.getText().toString(), order,

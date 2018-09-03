@@ -117,8 +117,8 @@ public class WelcomeActivity extends AppCompatActivity {
 
   private void createUser(){
     final String formattedEmail = user.getEmail().replace('.', ',');
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/emailToUid/"+formattedEmail).setValue(user.getUid());
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/uidToEmail/"+user.getUid()).setValue(user.getEmail());
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/emailToUid/"+formattedEmail).setValue(user.getUid());
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/uidToEmail/"+user.getUid()).setValue(user.getEmail());
   }
 
   @Override
