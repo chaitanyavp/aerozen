@@ -1,57 +1,32 @@
 package me.chaitanyavp.aerozen;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
 
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
@@ -64,7 +39,7 @@ public class WelcomeActivity extends AppCompatActivity {
   private GoogleSignInClient mGoogleSignInClient;
   private FirebaseDatabase database;
 
-  private HashMap<String, String> user_rooms;
+  private HashMap<String, String> userRooms;
 
   // UI references.
   private LinearLayout roomLayout;
@@ -79,6 +54,7 @@ public class WelcomeActivity extends AppCompatActivity {
     System.out.println("STARTING");
     title = findViewById(R.id.title_text);
     roomLayout = findViewById(R.id.roomlist);
+    userRooms = new HashMap<>();
 //    FirebaseDatabase database = FirebaseDatabase.getInstance();
 //    DatabaseReference myRef = database.getReference("message");
 //    DatabaseReference test = database.getReference("test").setValue("verybad");
@@ -124,7 +100,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
   private void updateUI() {
     roomLayout.removeAllViews();
-    for (HashMap.Entry<String, String> room : user_rooms.entrySet()) {
+    for (HashMap.Entry<String, String> room : userRooms.entrySet()) {
       final String room_name = room.getKey();
       final String room_id = room.getValue();
       Button roomButton = new Button(this);
@@ -141,8 +117,8 @@ public class WelcomeActivity extends AppCompatActivity {
 
   private void createUser(){
     final String formattedEmail = user.getEmail().replace('.', ',');
-    database.getReference().child("emailToUid").child(formattedEmail).setValue(user.getUid());
-    database.getReference().child("uidToEmail").child(user.getUid()).setValue(user.getEmail());
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/emailToUid/"+formattedEmail).setValue(user.getUid());
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/uidToEmail/"+user.getUid()).setValue(user.getEmail());
   }
 
   @Override
@@ -159,21 +135,32 @@ public class WelcomeActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
 
         createUser();
-
-        database.getReference().child("user_rooms").child(user.getUid()).addValueEventListener(
-            new ValueEventListener() {
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/" + user.getUid())
+            .addChildEventListener(new ChildEventListener() {
               @Override
-              public void onDataChange(DataSnapshot dataSnapshot) {
-                user_rooms = new HashMap<String,String>();
-                title.setText(title.getText() + " onDataChange");
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                  user_rooms.put((String) snapshot.getValue(), snapshot.getKey());
-                }
+              public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                userRooms.put(dataSnapshot.getValue().toString(), dataSnapshot.getKey());
                 updateUI();
               }
-              @Override
-              public void onCancelled(DatabaseError error) {
 
+              @Override
+              public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                userRooms.put(dataSnapshot.getValue().toString(), dataSnapshot.getKey());
+                updateUI();
+              }
+
+              @Override
+              public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                userRooms.remove(dataSnapshot.getValue().toString());
+                updateUI();
+              }
+
+              @Override
+              public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+              }
+
+              @Override
+              public void onCancelled(@NonNull DatabaseError databaseError) {
               }
             });
 

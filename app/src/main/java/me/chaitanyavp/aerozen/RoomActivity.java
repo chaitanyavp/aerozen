@@ -98,6 +98,7 @@ public class RoomActivity extends AppCompatActivity {
   private FirebaseDatabase database;
   private String roomID;
   private String userID;
+  private String userEmail;
   private TextView t;
   private Toolbar toolbar;
 
@@ -163,7 +164,7 @@ public class RoomActivity extends AppCompatActivity {
     Intent intent = getIntent();
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
-    String userEmail = intent.getStringExtra("user_email");
+    userEmail = intent.getStringExtra("user_email");
 
     t = findViewById(R.id.test);
     t.setText("Started" + roomID);
@@ -507,7 +508,7 @@ public class RoomActivity extends AppCompatActivity {
                           + newUserID).setValue(true);
                   database.getReferenceFromUrl(
                       "https://kanban-f611c.firebaseio.com/user_rooms/" + newUserID + "/" + roomID)
-                      .setValue(true);
+                      .setValue(userEmail);
                   Snackbar.make(toolbar, "User added", Snackbar.LENGTH_LONG).show();
                 }
               }
