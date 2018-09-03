@@ -43,6 +43,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
+import android.widget.RadioGroup;
 import android.widget.TimePicker;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -754,7 +755,7 @@ public class RoomActivity extends AppCompatActivity {
 
         if (task != null) {
           database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-              + boardList.get(mViewPager.getCurrentItem() - 1) + "/").child("tasks")
+              + boardName + "/").child("tasks")
               .child(task.getId())
               .setValue(taskInput.getText().toString());
           String takerString = android.text.TextUtils.join(" ", takers);
