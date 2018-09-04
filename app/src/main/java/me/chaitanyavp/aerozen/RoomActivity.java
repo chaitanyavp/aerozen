@@ -129,8 +129,6 @@ public class RoomActivity extends AppCompatActivity {
     mViewPager.setAdapter(mSectionsPagerAdapter);
 
     calendar = Calendar.getInstance();
-    System.out.println("VERY GOOD 1");
-    Log.w("BAD", "we have began");
 
     final FloatingActionMenu fam = (FloatingActionMenu) findViewById(R.id.fab_main);
 
@@ -147,7 +145,12 @@ public class RoomActivity extends AppCompatActivity {
     fab1.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        addRoomMemberDialog().show();
+        if(userID.equals(roomID)) {
+          addRoomMemberDialog().show();
+        }
+        else{
+          Snackbar.make(toolbar, "You do not have permission.", Snackbar.LENGTH_LONG).show();
+        }
       }
     });
 
@@ -261,6 +264,39 @@ public class RoomActivity extends AppCompatActivity {
 
           }
         });
+
+    //If the user gets kicked from the room, return to parent activity.
+    if(!userID.equals(roomID)){
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/" + userID)
+          .addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+              if(dataSnapshot.getKey().equals(roomID)){
+                finish();
+              }
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+          });
+    }
   }
 
   private void addBoard(final String boardName, String prev) {
