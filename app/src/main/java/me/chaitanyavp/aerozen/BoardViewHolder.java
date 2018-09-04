@@ -21,7 +21,7 @@ public class BoardViewHolder extends RecyclerView.ViewHolder {
     itemView.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
-        //    createBoardEditDialog
+            roomActivity.createBoardEditDialog(boardID).show();
       }
     });
   }

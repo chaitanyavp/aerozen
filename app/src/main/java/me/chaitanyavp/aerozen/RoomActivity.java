@@ -669,6 +669,7 @@ public class RoomActivity extends AppCompatActivity {
     boardInput.setInputType(InputType.TYPE_CLASS_TEXT);
     boardInput.setText(boardNames.get(boardID));
 
+    alertLayout.addView(boardInput);
     builder.setView(alertLayout);
 
     builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
