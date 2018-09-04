@@ -478,11 +478,9 @@ public class RoomActivity extends AppCompatActivity {
 
   private void addTaskToDatabase(Task task) {
     int position = mViewPager.getCurrentItem() - 1;
-
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
         + boardList.get(position) + "/").child("tasks").child(task.getId())
         .setValue(task.getText());
-
     DatabaseReference taskRef = database
         .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
     taskRef.child("task_duedate").child(task.getId()).setValue(task.getDueDate());
@@ -497,10 +495,8 @@ public class RoomActivity extends AppCompatActivity {
     String creator = taskID.substring(0, taskID.length() - 13);
     long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
     final Task existingTask = new Task(creator, creationDate);
-
     DatabaseReference taskRef = database
         .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
-
     existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
     existingTask.addPriorityListener(taskRef, mSectionsPagerAdapter);
     existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
@@ -509,7 +505,10 @@ public class RoomActivity extends AppCompatActivity {
   }
 
   public void removeMember(String memberID){
-
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/"
+        + memberID + "/" + roomID).setValue(null);
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/"
+        + roomID + "/" + memberID).setValue(null);
   }
 
   public void completeBoard(String boardID) {
