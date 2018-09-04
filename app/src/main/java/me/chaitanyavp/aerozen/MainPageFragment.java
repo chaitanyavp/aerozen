@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -181,7 +182,15 @@ public class MainPageFragment extends Fragment {
     builder.setNeutralButton("Remove Member", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialogInterface, int i) {
-        roomActivity.removeMember("memberID");
+        if(!roomActivity.isCurrentUserOwner()) {
+          roomActivity.showSnackBar("You do not have permission.");
+        }
+        else if(memberID.equals(roomActivity.getRoomID())){
+          roomActivity.showSnackBar("You can't remove owner.");
+        }
+        else{
+          roomActivity.removeMember(memberID);
+        }
       }
     });
     builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {

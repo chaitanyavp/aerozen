@@ -100,6 +100,7 @@ public class RoomActivity extends AppCompatActivity {
   private ViewPager mViewPager;
 
   private FirebaseDatabase database;
+
   private String roomID;
   private String userID;
   private String userEmail;
@@ -145,7 +146,7 @@ public class RoomActivity extends AppCompatActivity {
     fab1.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if(userID.equals(roomID)) {
+        if(isCurrentUserOwner()) {
           addRoomMemberDialog().show();
         }
         else{
@@ -266,7 +267,7 @@ public class RoomActivity extends AppCompatActivity {
         });
 
     //If the user gets kicked from the room, return to parent activity.
-    if(!userID.equals(roomID)){
+    if(!isCurrentUserOwner()){
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/" + userID)
           .addChildEventListener(new ChildEventListener() {
             @Override
@@ -459,6 +460,18 @@ public class RoomActivity extends AppCompatActivity {
     }
   }
 
+  public boolean isCurrentUserOwner(){
+    return roomID.equals(userID);
+  }
+
+  public String getRoomID() {
+    return roomID;
+  }
+
+  public void showSnackBar(String s) {
+    Snackbar.make(toolbar, s, Snackbar.LENGTH_LONG).show();
+  }
+
   public DatabaseReference getRefFromUrl(String url) {
     return database.getReferenceFromUrl(url);
   }
@@ -552,7 +565,7 @@ public class RoomActivity extends AppCompatActivity {
               @Override
               public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.exists()) {
-                  Snackbar.make(toolbar, "No user with that email", Snackbar.LENGTH_LONG).show();
+                  showSnackBar("No user with that email");
                 } else {
                   String newUserID = (String) dataSnapshot.getValue();
                   database.getReferenceFromUrl(
@@ -561,7 +574,7 @@ public class RoomActivity extends AppCompatActivity {
                   database.getReferenceFromUrl(
                       "https://kanban-f611c.firebaseio.com/user_rooms/" + newUserID + "/" + roomID)
                       .setValue(userEmail);
-                  Snackbar.make(toolbar, "User added", Snackbar.LENGTH_LONG).show();
+                  showSnackBar("User added");
                 }
               }
 
