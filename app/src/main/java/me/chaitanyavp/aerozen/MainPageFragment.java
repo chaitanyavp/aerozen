@@ -178,6 +178,12 @@ public class MainPageFragment extends Fragment {
 //
 //      }
 //    });
+    builder.setNeutralButton("Remove Member", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+        roomActivity.removeMember("memberID");
+      }
+    });
     builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {

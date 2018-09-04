@@ -459,6 +459,10 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
+  public void removeMember(String memberID){
+
+  }
+
   public void completeBoard(String boardID) {
     if (boardID.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
