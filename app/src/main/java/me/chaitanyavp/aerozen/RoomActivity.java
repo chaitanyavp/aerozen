@@ -47,7 +47,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TimePicker;
 import com.github.clans.fab.FloatingActionButton;
@@ -68,7 +67,6 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.Comparator;
@@ -160,9 +158,6 @@ public class RoomActivity extends AppCompatActivity {
         int position = mViewPager.getCurrentItem() - 1;
         if (position >= 0 && position < boardList.size()) {
           createTaskDialog(null, boardList.get(position)).show();
-        } else {
-          completeTask("1Z5zbcU1HQYHmh0sWuqekXQpoVu21533597360936",
-              "1Z5zbcU1HQYHmh0sWuqekXQpoVu2_board1");
         }
         fam.close(true);
       }
@@ -189,7 +184,7 @@ public class RoomActivity extends AppCompatActivity {
     roomMembers = new HashMap<String, String>();
     roomMembers.put(userID, userEmail);
 
-    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID)
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID+"/boards/")
         .addChildEventListener(new ChildEventListener() {
           @Override
           public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -464,6 +459,17 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
+  public void completeBoard(String boardID) {
+    if (boardID.equals("")) {
+      int position = mViewPager.getCurrentItem() - 1;
+      boardID = boardList.get(position);
+    }
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
+          + "/completed_tasks/" + boardID).setValue(boardNames.get(boardID));
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
+          + "/boards/" + boardID).setValue(null);
+  }
+
   public void completeTask(String taskID, String boardName) {
     if (boardName.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
@@ -565,7 +571,7 @@ public class RoomActivity extends AppCompatActivity {
             .setValue(boardList.size());
         database.getReferenceFromUrl(
             "https://kanban-f611c.firebaseio.com/boards/" + boardID + "/room_id").setValue(roomID);
-        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID + "/"
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID+"/boards/"
             + boardID).setValue(boardName);
 
       }
@@ -645,58 +651,47 @@ public class RoomActivity extends AppCompatActivity {
     return builder.create();
   }
 
-//  public AlertDialog createBoardSelectDialog(final String initialBoard, final
-//  HashMap<String, String> output) {
-//    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//    final LinearLayout alertLayout = new LinearLayout(this);
-//    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
-//        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-//
-//    builder.setTitle("Select board for this task");
-//
-//    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
-//    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-//    alertLayout.setOrientation(LinearLayout.VERTICAL);
-//    alertLayout.setLayoutParams(alertLayoutParams);
-//    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
-//
-//    final HashMap<String,String> selectedBoard = new HashMap<>();
-//
-//    for(final String board : boardList) {
-//      final CheckBox memberCheckBox = new CheckBox(this);
-//      memberCheckBox.setText(boardNames.get(board));
-//      memberCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-//        @Override
-//        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-//          if(b){
-//            selectedBoard.put("board", board);
-//          }
-//        }
-//      });
-//      if(board.equals(initialBoard)){
-//        memberCheckBox.setChecked(true);
-//      }
-//      alertLayout.addView(memberCheckBox);
-//    }
-//
-//    builder.setView(alertLayout);
-//
-//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
-//      @Override
-//      public void onClick(DialogInterface dialogInterface, int i) {
-//        if(selectedBoard.containsKey("board")) {
-//          output.put("board", selectedBoard.get("board"));
-//        }
-//      }
-//    });
-//    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
-//      @Override
-//      public void onClick(DialogInterface dialogInterface, int i) {
-//      }
-//    });
-//
-//    return builder.create();
-//  }
+  public AlertDialog createBoardEditDialog(final String boardID) {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    final LinearLayout alertLayout = new LinearLayout(this);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+    builder.setTitle("Edit board");
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final EditText boardInput = new EditText(this);
+    boardInput.setInputType(InputType.TYPE_CLASS_TEXT);
+    boardInput.setText(boardNames.get(boardID));
+
+    builder.setView(alertLayout);
+
+    builder.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+        database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"
+            + roomID + "/boards/" + boardID).setValue(boardInput.getText().toString());
+      }
+    });
+    builder.setNeutralButton("Archive", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+        completeBoard(boardID);
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+      }
+    });
+
+    return builder.create();
+  }
 
   public AlertDialog createTaskDialog(final Task task, String boardToPut) {
     if (boardToPut.equals("")) {
@@ -916,8 +911,8 @@ public class RoomActivity extends AppCompatActivity {
     return userID;
   }
 
-  public HashMap<String, String> getBoardNames() {
-    return boardNames;
+  public String getBoardName(String boardID) {
+    return boardNames.get(boardID);
   }
 
   public HashMap<String, ArrayList<String>> getBoardTaskList() {

@@ -60,7 +60,6 @@ public class MainPageFragment extends Fragment {
     newCard.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
-        //TODO: member dialog
         createMemberDialog(memberID, memberName, context).show();
       }
     });
@@ -198,7 +197,7 @@ public class MainPageFragment extends Fragment {
 //    FirebaseDatabase db = (FirebaseDatabase) argBundle.getSerializable("database");
 
     final RecyclerListAdapter adapter = new RecyclerListAdapter(((RoomActivity)getActivity()).getBoardList(),
-        ((RoomActivity)getActivity()).getBoardNames(), (RoomActivity)getActivity());
+        (RoomActivity)getActivity());
 
     RecyclerView recyclerView = view.findViewById(R.id.boardlist_rec);
     recyclerView.setHasFixedSize(true);

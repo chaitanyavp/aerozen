@@ -19,15 +19,13 @@ import java.lang.Math;
 public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
   private final ArrayList<String> mItems;
-  private final HashMap<String, String> mNames;
   private final RoomActivity roomActivity;
 
   private int dragFrom;
   private int dragTo;
 
-  public RecyclerListAdapter(ArrayList<String> items, HashMap<String, String> names, RoomActivity room) {
+  public RecyclerListAdapter(ArrayList<String> items, RoomActivity room) {
     mItems = items;
-    mNames = names;
     roomActivity = room;
     dragFrom = -1;
     dragTo = -1;
@@ -42,7 +40,7 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<BoardViewHolder> {
 
   @Override
   public void onBindViewHolder(BoardViewHolder holder, int position) {
-    holder.setName(mNames.get(mItems.get(position)));
+    holder.setBoard(mItems.get(position), roomActivity);
   }
 
   @Override
