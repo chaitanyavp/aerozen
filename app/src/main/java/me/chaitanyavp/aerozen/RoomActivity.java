@@ -331,7 +331,6 @@ public class RoomActivity extends AppCompatActivity {
       public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         Task task = getTaskFromDatabaseAndAddListeners(dataSnapshot.getKey(),
             (String) dataSnapshot.getValue());
-        task.setText((String) dataSnapshot.getValue());
 
         allTasks.put(dataSnapshot.getKey(), task);
         boardTaskList.get(boardName).add(dataSnapshot.getKey());
@@ -487,6 +486,10 @@ public class RoomActivity extends AppCompatActivity {
     return roomID;
   }
 
+  public void addHeader(String s){
+    t.setText(t.getText() + "," + s);
+  }
+
   public void showSnackBar(String s) {
     Snackbar.make(toolbar, s, Snackbar.LENGTH_LONG).show();
   }
@@ -510,10 +513,11 @@ public class RoomActivity extends AppCompatActivity {
     taskRef.child("task_room").child(task.getId()).setValue(roomID);
   }
 
-  private Task getTaskFromDatabaseAndAddListeners(String taskID, String text) {
+  public Task getTaskFromDatabaseAndAddListeners(String taskID, String text) {
     String creator = taskID.substring(0, taskID.length() - 13);
     long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
     final Task existingTask = new Task(creator, creationDate);
+    existingTask.setText(text);
     DatabaseReference taskRef = database
         .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
     existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
@@ -552,6 +556,15 @@ public class RoomActivity extends AppCompatActivity {
           + "/completed_tasks/" + taskID).setValue(completedTask.getText());
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
           + "/tasks/" + taskID).setValue(null);
+    }
+  }
+
+  public void unCompleteTask(Task completedTask, String boardName) {
+    if (completedTask != null) {
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
+          + "/tasks/" + completedTask.getId()).setValue(completedTask.getText());
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
+          + "/completed_tasks/" + completedTask.getId()).setValue(null);
     }
   }
 
