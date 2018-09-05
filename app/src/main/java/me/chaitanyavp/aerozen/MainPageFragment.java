@@ -21,8 +21,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -30,7 +34,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -97,9 +104,57 @@ public class MainPageFragment extends Fragment {
     return newCard;
   }
 
+  private View createViewForCompletedTask(final Task completedTask, final String board,
+      final RoomActivity roomActivity){
+    Context context = roomActivity.getApplicationContext();
+    CardView newCard = new CardView(context);
+//    TextView textView = new TextView(context);
+//    textView.setText(completedTask.getText());
+
+    CheckBox completedBox = new CheckBox(context);
+    completedBox.setText(completedTask.getText());
+    completedBox.setChecked(true);
+    completedBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        if(!b) {
+          roomActivity.unCompleteTask(completedTask, board);
+        }
+      }
+    });
+
+    newCard.addView(completedBox);
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+    );
+    Resources r = context.getResources();
+    final int TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        r.getDisplayMetrics()
+    );
+    params.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    newCard.setLayoutParams(params);
+
+    CardView.LayoutParams cardParams = new CardView.LayoutParams(
+        CardView.LayoutParams.WRAP_CONTENT,
+        CardView.LayoutParams.WRAP_CONTENT
+    );
+    final int SIXTEEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        16,
+        r.getDisplayMetrics()
+    );
+    cardParams.setMargins(SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP);
+    completedBox.setLayoutParams(cardParams);
+    return newCard;
+  }
+
   private AlertDialog createMemberDialog(final String memberID, final String memberName,
       final Context context) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+    final ScrollView scrollView = new ScrollView(context);
     final LinearLayout alertLayout = new LinearLayout(context);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -119,9 +174,10 @@ public class MainPageFragment extends Fragment {
     alertLayout.setLayoutParams(alertLayoutParams);
     alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
 
-    final HashMap<String, TextView> completedTasks = new HashMap<>();
+    final HashMap<String, View> completedTaskViews = new HashMap<>();
+    final HashMap<String, Task> completedTasks = new HashMap<>();
 
-    for(String boardID : roomActivity.getBoardList()) {
+    for(final String boardID : roomActivity.getBoardList()) {
       final DatabaseReference dataRef =
           roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/completed_tasks");
       dataRef.addChildEventListener(new ChildEventListener(){
@@ -133,12 +189,20 @@ public class MainPageFragment extends Fragment {
               + dataSnapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot takerSnapshot) {
+//              roomActivity.addHeader("Now doing takers: ");
               for(String taker : takerSnapshot.getValue().toString().split(" ")){
+//                roomActivity.addHeader(taker);
                 if(taker.equals(memberID)){
-                  TextView t = new TextView(context);
-                  t.setText(taskText);
-                  alertLayout.addView(t);
-                  completedTasks.put(taskID, t);
+
+                  Task completedTask = roomActivity.getTaskFromDatabaseAndAddListeners(taskID, taskText);
+                  //                  TaskViewHolder t = new TaskViewHolder(taskView);
+//                  t.setTask(completedTask, memberID, roomActivity);
+//                  TextView t = new TextView(context);
+//                  t.setText(taskText);
+                  View taskView = createViewForCompletedTask(completedTask, boardID, roomActivity);
+                  alertLayout.addView(taskView);
+                  completedTasks.put(taskID, completedTask);
+                  completedTaskViews.put(taskID, taskView);
                   break;
                 }
               }
@@ -157,8 +221,12 @@ public class MainPageFragment extends Fragment {
         }
         @Override
         public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-          TextView t = completedTasks.remove(dataSnapshot.getKey());
-          alertLayout.removeView(t);
+          if(completedTasks.containsKey(dataSnapshot.getKey())) {
+            Task completedTask = completedTasks.remove(dataSnapshot.getKey());
+            View taskView = completedTaskViews.remove(dataSnapshot.getKey());
+            roomActivity.removeListenersFromTask(completedTask);
+            alertLayout.removeView(taskView);
+          }
         }
         @Override
         public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -170,8 +238,8 @@ public class MainPageFragment extends Fragment {
         }
       });
     }
-
-    builder.setView(alertLayout);
+    scrollView.addView(alertLayout);
+    builder.setView(scrollView);
 
 //    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 //      @Override

@@ -527,6 +527,10 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
+  public void removeListenersFromTask(Task task){
+    task.removeAllListeners(database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
+  }
+
   public void removeMember(String memberID){
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/"
         + memberID + "/" + roomID).setValue(null);
