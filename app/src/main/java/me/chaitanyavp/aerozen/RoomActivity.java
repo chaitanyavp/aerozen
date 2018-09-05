@@ -215,6 +215,23 @@ public class RoomActivity extends AppCompatActivity {
           }
         });
 
+    if (!isCurrentUserOwner()){
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/uidToEmail/"
+          + roomID).addListenerForSingleValueEvent(
+          new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+              if(dataSnapshot.getValue()!= null) {
+                roomMembers.put(roomID, dataSnapshot.getValue().toString());
+                mSectionsPagerAdapter.notifyDataSetChanged();
+              }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+          });
+    }
+
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/" + roomID)
         .addChildEventListener(new ChildEventListener() {
           @Override
@@ -224,8 +241,10 @@ public class RoomActivity extends AppCompatActivity {
                 new ValueEventListener() {
                   @Override
                   public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    roomMembers.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
-                    mSectionsPagerAdapter.notifyDataSetChanged();
+                    if(dataSnapshot.getValue()!= null) {
+                      roomMembers.put(dataSnapshot.getKey(), dataSnapshot.getValue().toString());
+                      mSectionsPagerAdapter.notifyDataSetChanged();
+                    }
                   }
                   @Override
                   public void onCancelled(@NonNull DatabaseError databaseError) {
