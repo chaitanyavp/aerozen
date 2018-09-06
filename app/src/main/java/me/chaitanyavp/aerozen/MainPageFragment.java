@@ -395,7 +395,7 @@ public class MainPageFragment extends Fragment {
     builder.setPositiveButton("Leave", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialogInterface, int i) {
-        roomActivity.removeMember(memberID);
+        roomActivity.leaveRoom();
       }
     });
     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

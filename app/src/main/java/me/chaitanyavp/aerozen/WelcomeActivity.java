@@ -89,8 +89,6 @@ public class WelcomeActivity extends AppCompatActivity {
   }
 
   private void goToRoom(String roomKey){
-    Log.w(TAG, "going to "+roomKey);
-    title.setText("Going to "+roomKey);
     Intent intent = new Intent(this, RoomActivity.class);
     intent.putExtra("room_id", roomKey);
     intent.putExtra("user_id", user.getUid());

@@ -534,6 +534,15 @@ public class RoomActivity extends AppCompatActivity {
         + roomID + "/" + memberID).setValue(null);
   }
 
+  public void leaveRoom(){
+    if(!isCurrentUserOwner()) {
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/room_members/"
+          + roomID + "/" + userID).setValue(null);
+      database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/"
+          + userID + "/" + roomID).setValue(null);
+    }
+  }
+
   public void completeBoard(String boardID) {
     if (boardID.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
