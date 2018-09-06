@@ -1191,11 +1191,18 @@ public class RoomActivity extends AppCompatActivity {
         rootView = inflater.inflate(R.layout.fragment_room, container, false);
 //        Context context = rootView.getContext();
         sectionNumber--;
-        String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
+        final String boardID = getArguments().getStringArrayList("boardList").get(sectionNumber);
         String boardName = boardNames.get(boardID);
 
         TextView textView = (TextView) rootView.findViewById(R.id.section_label);
         textView.setText(boardName);
+
+        rootView.findViewById(R.id.board_name_cardview).setOnClickListener(new OnClickListener() {
+          @Override
+          public void onClick(View view) {
+            roomActivity.createBoardEditDialog(boardID).show();
+          }
+        });
 //        LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
 
 //        for (String taskName : taskMapList.get(boardID)) {

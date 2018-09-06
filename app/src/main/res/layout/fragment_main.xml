@@ -51,5 +51,13 @@
 
         </LinearLayout>
     </ScrollView>
+    <Button
+      android:id="@+id/all_completed_tasks"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="10dp"
+      android:layout_gravity="center_horizontal"
+      android:background="@color/colorAccent"
+      android:text="View all completed Tasks" />
 
 </LinearLayout>

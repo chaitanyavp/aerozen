@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -59,6 +60,13 @@ public class MainPageFragment extends Fragment {
       addCard((LinearLayout) rootView.findViewById(R.id.member_layout), memberID,
           roomMembers.get(memberID), rootView.getContext());
     }
+    Button viewAllCompletedTasks = rootView.findViewById(R.id.all_completed_tasks);
+    viewAllCompletedTasks.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        allCompletedTasksDialog("", getContext()).show();
+      }
+    });
     return rootView;
   }
 
@@ -252,12 +260,6 @@ public class MainPageFragment extends Fragment {
     scrollView.addView(alertLayout);
     builder.setView(scrollView);
 
-//    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//      @Override
-//      public void onClick(DialogInterface dialog, int which) {
-//
-//      }
-//    });
     builder.setNeutralButton("Remove Member", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialogInterface, int i) {
@@ -272,6 +274,109 @@ public class MainPageFragment extends Fragment {
         }
       }
     });
+    builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    return builder.create();
+  }
+
+  private AlertDialog allCompletedTasksDialog(final String boardToPut, final Context context){
+    final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+    final ScrollView scrollView = new ScrollView(context);
+    final LinearLayout alertLayout = new LinearLayout(context);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    final TextView pointsView = new TextView(context);
+    pointsView.setText("0 points");
+    builder.setTitle("Completed Tasks");
+    alertLayout.addView(pointsView);
+    int TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
+    final RoomActivity roomActivity = ((RoomActivity) getActivity());
+
+    final HashMap<Integer, Integer> totalPoints = new HashMap<>();
+    totalPoints.put(0, 0);
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final HashMap<String, View> completedTaskViews = new HashMap<>();
+    final HashMap<String, Integer> completedTaskPoints = new HashMap<>();
+
+    ArrayList<String> boardsToGoThrough;
+    if(boardToPut.equals("")) {
+      boardsToGoThrough = roomActivity.getBoardList();
+    }
+    else{
+      boardsToGoThrough = new ArrayList<String>();
+      boardsToGoThrough.add(boardToPut);
+    }
+
+    for(final String boardID : boardsToGoThrough) {
+      final DatabaseReference dataRef =
+          roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/completed_tasks");
+      dataRef.addChildEventListener(new ChildEventListener(){
+        @Override
+        public void onChildAdded(@NonNull final DataSnapshot dataSnapshot, @Nullable String s) {
+          final String taskID = dataSnapshot.getKey();
+          final String taskText = dataSnapshot.getValue().toString();
+          roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/task_points/" + taskID)
+            .addListenerForSingleValueEvent(new ValueEventListener() {
+              @Override
+              public void onDataChange(@NonNull DataSnapshot pointSnapshot) {
+                int taskPoints = 0;
+                if(pointSnapshot.getValue() != null) {
+                  taskPoints = Integer.parseInt(pointSnapshot.getValue().toString());
+                }
+                View taskView = createViewForCompletedTask(taskID, taskText, boardID, roomActivity);
+                alertLayout.addView(taskView);
+                completedTaskPoints.put(taskID,taskPoints);
+                completedTaskViews.put(taskID,taskView);
+                totalPoints.put(0,totalPoints.get(0)+taskPoints);
+                pointsView.setText(totalPoints.get(0)+" points");
+              }
+
+              @Override
+              public void onCancelled(@NonNull DatabaseError databaseError) {
+
+              }
+            });
+        }
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+        }
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+          if(completedTaskViews.containsKey(dataSnapshot.getKey())) {
+            int taskPoints = completedTaskPoints.remove(dataSnapshot.getKey());
+            View taskView = completedTaskViews.remove(dataSnapshot.getKey());
+            alertLayout.removeView(taskView);
+            totalPoints.put(0, totalPoints.get(0) - taskPoints);
+            pointsView.setText(totalPoints.get(0)+" points");
+          }
+        }
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+      });
+    }
+    scrollView.addView(alertLayout);
+    builder.setView(scrollView);
+
     builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
