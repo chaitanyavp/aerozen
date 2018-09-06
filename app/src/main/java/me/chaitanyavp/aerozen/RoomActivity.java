@@ -527,56 +527,6 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
-//  public Task getStaticTaskFromDatabase(String taskID, String text) {
-//    String creator = taskID.substring(0, taskID.length() - 13);
-//    long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
-//    final Task existingTask = new Task(creator, creationDate);
-//    existingTask.setText(text);
-//    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/task_points/"+taskID)
-//        .addListenerForSingleValueEvent(new ValueEventListener() {
-//          @Override
-//          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//            if(dataSnapshot.getValue() == null){
-//              existingTask.setPoints(0);
-//            }
-//            else{
-//              existingTask.setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
-//            }
-//            mSectionsPagerAdapter.notifyDataSetChanged();
-//          }
-//          @Override
-//          public void onCancelled(@NonNull DatabaseError databaseError) {
-//          }
-//        }
-//    );
-//    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/task_duedate/"+taskID)
-//        .addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//              if(dataSnapshot.getValue() == null){
-//                existingTask.setPoints(0);
-//              }
-//              else{
-//                existingTask.setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
-//              }
-//              mSectionsPagerAdapter.notifyDataSetChanged();
-//            }
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//            }
-//          }
-//        );
-//    existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
-//    existingTask.addPriorityListener(taskRef, mSectionsPagerAdapter);
-//    existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
-//    existingTask.addDueDateListener(taskRef, mSectionsPagerAdapter);
-//    return existingTask;
-//  }
-
-  public void removeListenersFromTask(Task task){
-    task.removeAllListeners(database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
-  }
-
   public void removeMember(String memberID){
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/user_rooms/"
         + memberID + "/" + roomID).setValue(null);
@@ -590,7 +540,7 @@ public class RoomActivity extends AppCompatActivity {
       boardID = boardList.get(position);
     }
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
-          + "/completed_tasks/" + boardID).setValue(boardNames.get(boardID));
+          + "/completed_boards/" + boardID).setValue(boardNames.get(boardID));
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
           + "/boards/" + boardID).setValue(null);
   }
@@ -1147,46 +1097,6 @@ public class RoomActivity extends AppCompatActivity {
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
         Context context = rootView.getContext();
         LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
-//        CardView newCard = new CardView(context);
-//        newCard.setOnClickListener(new OnClickListener() {
-//          @Override
-//          public void onClick(View view) {
-//          }
-//        });
-//          TextView test = new TextView(context);
-//          test.setText("manage boards");
-//        newCard.addView(test);
-//
-//        CardView newCard1 = new CardView(context);
-//        newCard1.setOnClickListener(new OnClickListener() {
-//          @Override
-//          public void onClick(View view) {
-//          }
-//        });
-//        TextView test1 = new TextView(context);
-//        test1.setText("see user contributions");
-//        newCard1.addView(test1);
-//
-//        CardView newCard2 = new CardView(context);
-//        newCard2.setOnClickListener(new OnClickListener() {
-//          @Override
-//          public void onClick(View view) {
-//          }
-//        });
-//        TextView test2 = new TextView(context);
-//        test2.setText("manage members");
-//        newCard2.addView(test2);
-//
-//        CardView newCard3 = new CardView(context);
-//        newCard3.setOnClickListener(new OnClickListener() {
-//          @Override
-//          public void onClick(View view) {
-//          }
-//        });
-//        TextView test3 = new TextView(context);
-//        test3.setText("Change rooms");
-//          parentLayout.addView(test);
-//        newCard3.addView(test3);
       } else {
         rootView = inflater.inflate(R.layout.fragment_room, container, false);
 //        Context context = rootView.getContext();
