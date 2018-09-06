@@ -180,7 +180,6 @@ public class Task {
         else{
           setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
         }
-
         adapter.notifyDataSetChanged();
       }
       @Override

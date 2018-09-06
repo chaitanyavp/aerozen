@@ -527,6 +527,52 @@ public class RoomActivity extends AppCompatActivity {
     return existingTask;
   }
 
+//  public Task getStaticTaskFromDatabase(String taskID, String text) {
+//    String creator = taskID.substring(0, taskID.length() - 13);
+//    long creationDate = Long.parseLong(taskID.substring(taskID.length() - 13, taskID.length()));
+//    final Task existingTask = new Task(creator, creationDate);
+//    existingTask.setText(text);
+//    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/task_points/"+taskID)
+//        .addListenerForSingleValueEvent(new ValueEventListener() {
+//          @Override
+//          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//            if(dataSnapshot.getValue() == null){
+//              existingTask.setPoints(0);
+//            }
+//            else{
+//              existingTask.setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
+//            }
+//            mSectionsPagerAdapter.notifyDataSetChanged();
+//          }
+//          @Override
+//          public void onCancelled(@NonNull DatabaseError databaseError) {
+//          }
+//        }
+//    );
+//    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/task_duedate/"+taskID)
+//        .addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//              if(dataSnapshot.getValue() == null){
+//                existingTask.setPoints(0);
+//              }
+//              else{
+//                existingTask.setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
+//              }
+//              mSectionsPagerAdapter.notifyDataSetChanged();
+//            }
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//            }
+//          }
+//        );
+//    existingTask.addTakersListener(taskRef, mSectionsPagerAdapter);
+//    existingTask.addPriorityListener(taskRef, mSectionsPagerAdapter);
+//    existingTask.addPointsListener(taskRef, mSectionsPagerAdapter);
+//    existingTask.addDueDateListener(taskRef, mSectionsPagerAdapter);
+//    return existingTask;
+//  }
+
   public void removeListenersFromTask(Task task){
     task.removeAllListeners(database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/"));
   }
@@ -563,12 +609,12 @@ public class RoomActivity extends AppCompatActivity {
     }
   }
 
-  public void unCompleteTask(Task completedTask, String boardName) {
-    if (completedTask != null) {
+  public void unCompleteTask(String completedTaskID, String completedTaskText, String boardName) {
+    if(completedTaskID != null) {
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
-          + "/tasks/" + completedTask.getId()).setValue(completedTask.getText());
+          + "/tasks/" + completedTaskID).setValue(completedTaskText);
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
-          + "/completed_tasks/" + completedTask.getId()).setValue(null);
+          + "/completed_tasks/" + completedTaskID).setValue(null);
     }
   }
 

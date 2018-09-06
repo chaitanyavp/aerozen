@@ -104,21 +104,21 @@ public class MainPageFragment extends Fragment {
     return newCard;
   }
 
-  private View createViewForCompletedTask(final Task completedTask, final String board,
-      final RoomActivity roomActivity){
+  private View createViewForCompletedTask(final String completedTaskID, final String completedTaskText,
+      final String board, final RoomActivity roomActivity){
     Context context = roomActivity.getApplicationContext();
     CardView newCard = new CardView(context);
 //    TextView textView = new TextView(context);
 //    textView.setText(completedTask.getText());
 
     CheckBox completedBox = new CheckBox(context);
-    completedBox.setText(completedTask.getText());
+    completedBox.setText(completedTaskText);
     completedBox.setChecked(true);
     completedBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
         if(!b) {
-          roomActivity.unCompleteTask(completedTask, board);
+          roomActivity.unCompleteTask(completedTaskID, completedTaskText, board);
         }
       }
     });
@@ -158,7 +158,10 @@ public class MainPageFragment extends Fragment {
     final LinearLayout alertLayout = new LinearLayout(context);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-
+    final TextView pointsView = new TextView(context);
+    pointsView.setText("0 points");
+    builder.setTitle(memberName);
+    alertLayout.addView(pointsView);
     int TEN_DP = (int) TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         10,
@@ -166,7 +169,8 @@ public class MainPageFragment extends Fragment {
     );
     final RoomActivity roomActivity = ((RoomActivity) getActivity());
 
-    builder.setTitle(memberName);
+    final HashMap<Integer, Integer> totalPoints = new HashMap<>();
+    totalPoints.put(0, 0);
 
     alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -175,34 +179,43 @@ public class MainPageFragment extends Fragment {
     alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
 
     final HashMap<String, View> completedTaskViews = new HashMap<>();
-    final HashMap<String, Task> completedTasks = new HashMap<>();
+    final HashMap<String, Integer> completedTaskPoints = new HashMap<>();
 
     for(final String boardID : roomActivity.getBoardList()) {
       final DatabaseReference dataRef =
           roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/completed_tasks");
       dataRef.addChildEventListener(new ChildEventListener(){
         @Override
-        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+        public void onChildAdded(@NonNull final DataSnapshot dataSnapshot, @Nullable String s) {
           final String taskID = dataSnapshot.getKey();
           final String taskText = dataSnapshot.getValue().toString();
-          roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/task_takers/"
-              + dataSnapshot.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+          roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/task_takers/" + taskID)
+              .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot takerSnapshot) {
-//              roomActivity.addHeader("Now doing takers: ");
               for(String taker : takerSnapshot.getValue().toString().split(" ")){
-//                roomActivity.addHeader(taker);
                 if(taker.equals(memberID)){
+                  roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/task_points/" + taskID)
+                      .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot pointSnapshot) {
+                      int taskPoints = 0;
+                      if(pointSnapshot.getValue() != null) {
+                        taskPoints = Integer.parseInt(pointSnapshot.getValue().toString());
+                      }
+                      View taskView = createViewForCompletedTask(taskID, taskText, boardID, roomActivity);
+                      alertLayout.addView(taskView);
+                      completedTaskPoints.put(taskID,taskPoints);
+                      completedTaskViews.put(taskID,taskView);
+                      totalPoints.put(0,totalPoints.get(0)+taskPoints);
+                      pointsView.setText(totalPoints.get(0)+" points");
+                    }
 
-                  Task completedTask = roomActivity.getTaskFromDatabaseAndAddListeners(taskID, taskText);
-                  //                  TaskViewHolder t = new TaskViewHolder(taskView);
-//                  t.setTask(completedTask, memberID, roomActivity);
-//                  TextView t = new TextView(context);
-//                  t.setText(taskText);
-                  View taskView = createViewForCompletedTask(completedTask, boardID, roomActivity);
-                  alertLayout.addView(taskView);
-                  completedTasks.put(taskID, completedTask);
-                  completedTaskViews.put(taskID, taskView);
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                  });
                   break;
                 }
               }
@@ -215,17 +228,15 @@ public class MainPageFragment extends Fragment {
         }
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-          if(completedTasks.containsKey(dataSnapshot.getKey())) {
-            completedTasks.get(dataSnapshot.getKey()).setText(dataSnapshot.getValue().toString());
-          }
         }
         @Override
         public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-          if(completedTasks.containsKey(dataSnapshot.getKey())) {
-            Task completedTask = completedTasks.remove(dataSnapshot.getKey());
+          if(completedTaskViews.containsKey(dataSnapshot.getKey())) {
+            int taskPoints = completedTaskPoints.remove(dataSnapshot.getKey());
             View taskView = completedTaskViews.remove(dataSnapshot.getKey());
-            roomActivity.removeListenersFromTask(completedTask);
             alertLayout.removeView(taskView);
+            totalPoints.put(0, totalPoints.get(0) - taskPoints);
+            pointsView.setText(totalPoints.get(0)+" points");
           }
         }
         @Override
