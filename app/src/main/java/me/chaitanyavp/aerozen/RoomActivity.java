@@ -554,6 +554,25 @@ public class RoomActivity extends AppCompatActivity {
           + "/boards/" + boardID).setValue(null);
   }
 
+  public void unCompleteBoard(final String boardID){
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
+        + "/completed_boards/" + boardID).addListenerForSingleValueEvent(new ValueEventListener() {
+      @Override
+      public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        if(dataSnapshot.getValue() != null){
+          String boardName = dataSnapshot.getValue().toString();
+          database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
+              + "/boards/" + boardID).setValue(boardName);
+          database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomID
+              + "/completed_boards/" + boardID).setValue(null);
+        }
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+      }
+    });
+  }
+
   public void completeTask(String taskID, String boardName) {
     if (boardName.equals("")) {
       int position = mViewPager.getCurrentItem() - 1;
