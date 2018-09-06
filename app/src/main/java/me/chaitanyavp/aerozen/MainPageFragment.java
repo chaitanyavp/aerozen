@@ -218,10 +218,8 @@ public class MainPageFragment extends Fragment {
                       totalPoints.put(0,totalPoints.get(0)+taskPoints);
                       pointsView.setText(totalPoints.get(0)+" points");
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
-
                     }
                   });
                   break;
@@ -264,7 +262,12 @@ public class MainPageFragment extends Fragment {
       @Override
       public void onClick(DialogInterface dialogInterface, int i) {
         if(!roomActivity.isCurrentUserOwner()) {
-          roomActivity.showSnackBar("You do not have permission.");
+          if(roomActivity.getUserID().equals(memberID)){
+            leaveRoomDialog(roomActivity, memberID).show();
+          }
+          else {
+            roomActivity.showSnackBar("You do not have permission.");
+          }
         }
         else if(memberID.equals(roomActivity.getRoomID())){
           roomActivity.showSnackBar("You can't remove owner.");
@@ -378,6 +381,24 @@ public class MainPageFragment extends Fragment {
     builder.setView(scrollView);
 
     builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    return builder.create();
+  }
+
+  private AlertDialog leaveRoomDialog(final RoomActivity roomActivity, final String memberID){
+    final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+    builder.setTitle("Are you sure you want to leave the room?");
+    builder.setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+        roomActivity.removeMember(memberID);
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         dialog.cancel();
