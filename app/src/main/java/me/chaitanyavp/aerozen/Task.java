@@ -24,7 +24,7 @@ public class Task {
 
   private HashMap<String, ValueEventListener> eventListeners;
 
-  public Task(String creator, long creationDate){
+  public Task(String creator, long creationDate) {
     this.creator = creator;
     this.creationDate = creationDate;
     this.id = creator + this.creationDate;
@@ -32,14 +32,15 @@ public class Task {
     this.eventListeners = new HashMap<String, ValueEventListener>();
   }
 
-  public Task(String creator, long creationDate, String text, int priority, int points){
+  public Task(String creator, long creationDate, String text, int priority, int points) {
     this(creator, creationDate);
     this.priority = priority;
     this.text = text;
     this.points = points;
   }
 
-  public Task(String creator, long creationDate, String text, int priority, int points, long dueDateEpoch){
+  public Task(String creator, long creationDate, String text, int priority, int points,
+      long dueDateEpoch) {
     this(creator, creationDate, text, priority, points);
     this.dueDate = dueDateEpoch;
   }
@@ -48,7 +49,8 @@ public class Task {
     this(creator, System.currentTimeMillis(), text, priority, points);
   }
 
-  public Task(String creator, String text, int priority, int points, HashMap<String, Integer> dueDate) {
+  public Task(String creator, String text, int priority, int points,
+      HashMap<String, Integer> dueDate) {
     this(creator, text, priority, points);
     setDueDate(dueDate);
   }
@@ -86,13 +88,11 @@ public class Task {
     takers.remove(taker);
   }
 
-  public void setDueDate(HashMap<String,Integer> dateTime){
-    Calendar dueDate = Calendar.getInstance();
-    dueDate.set(dateTime.get("year"), dateTime.get("month"), dateTime.get("day"), dateTime.get("hour"), dateTime.get("minute"));
-    this.dueDate = dueDate.getTimeInMillis();
+  public void setDueDate(HashMap<String, Integer> dateTime) {
+    this.dueDate = getEpochFromDueDate(dateTime);
   }
 
-  public void setDueDate(long dateTimeEpoch){
+  public void setDueDate(long dateTimeEpoch) {
     this.dueDate = dateTimeEpoch;
   }
 
@@ -104,21 +104,19 @@ public class Task {
     return creator;
   }
 
-  public String getTakerString(){
-    StringBuilder takerString = new StringBuilder();
-    for (String s : takers)
-    {
-      takerString.append(s);
-      takerString.append(" ");
-    }
-    return takerString.toString();
+  public String getTakerString() {
+    return android.text.TextUtils.join(" ", takers);
+  }
+
+  public ArrayList<String> getTakers() {
+    return new ArrayList<>(takers);
   }
 
   public int getPoints() {
     return points;
   }
 
-  public boolean hasTaker(String uid){
+  public boolean hasTaker(String uid) {
     return takers.contains(uid);
   }
 
@@ -127,35 +125,42 @@ public class Task {
   }
 
   // Created dueDateListener for Database at <<taskRef>> and notifies <<adapter>>.
-  public void addDueDateListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+  public void addDueDateListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter) {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        setDueDate((long) dataSnapshot.getValue());
-        adapter.notifyDataSetChanged();
+        if (dataSnapshot.getValue() != null) {
+          setDueDate((Long) dataSnapshot.getValue());
+          adapter.notifyDataSetChanged();
+        }
       }
+
       @Override
-      public void onCancelled(@NonNull DatabaseError databaseError) { }
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+      }
     };
     taskRef.child("task_duedate").child(this.id).addValueEventListener(listener);
     eventListeners.put("duedate", listener);
   }
 
-  public void addTakersListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+  public void addTakersListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter) {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        takers = new ArrayList<String>(Arrays.asList(((String) dataSnapshot.getValue()).split("\\s")));
+        takers = new ArrayList<String>(
+            Arrays.asList(((String) dataSnapshot.getValue()).split("\\s")));
         adapter.notifyDataSetChanged();
       }
+
       @Override
-      public void onCancelled(@NonNull DatabaseError databaseError) { }
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+      }
     };
     taskRef.child("task_takers").child(this.id).addValueEventListener(listener);
     eventListeners.put("takers", listener);
   }
 
-  public void addPriorityListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+  public void addPriorityListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter) {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -163,49 +168,61 @@ public class Task {
         adapter.updateOrder(getId());
         adapter.notifyDataSetChanged();
       }
+
       @Override
-      public void onCancelled(@NonNull DatabaseError databaseError) { }
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+      }
     };
     taskRef.child("task_priority").child(this.id).addValueEventListener(listener);
     eventListeners.put("priority", listener);
   }
 
-  public void addPointsListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter){
+  public void addPointsListener(DatabaseReference taskRef, final SectionsPagerAdapter adapter) {
     ValueEventListener listener = new ValueEventListener() {
       @Override
       public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        if(dataSnapshot.getValue() == null){
+        if (dataSnapshot.getValue() == null) {
           setPoints(0);
-        }
-        else{
+        } else {
           setPoints(Integer.parseInt(dataSnapshot.getValue().toString()));
         }
         adapter.notifyDataSetChanged();
       }
+
       @Override
-      public void onCancelled(@NonNull DatabaseError databaseError) { }
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+      }
     };
     taskRef.child("task_points").child(this.id).addValueEventListener(listener);
     eventListeners.put("points", listener);
   }
 
-  public void removeAllListeners(DatabaseReference taskRef){
-    if(eventListeners.containsKey("points")) {
+  public void removeAllListeners(DatabaseReference taskRef) {
+    if (eventListeners.containsKey("points")) {
       taskRef.child("task_points").child(this.id).removeEventListener(eventListeners.get("points"));
       eventListeners.remove("points");
     }
-    if(eventListeners.containsKey("priority")) {
-      taskRef.child("task_priority").child(this.id).removeEventListener(eventListeners.get("priority"));
+    if (eventListeners.containsKey("priority")) {
+      taskRef.child("task_priority").child(this.id)
+          .removeEventListener(eventListeners.get("priority"));
       eventListeners.remove("priority");
     }
-    if(eventListeners.containsKey("takers")) {
+    if (eventListeners.containsKey("takers")) {
       taskRef.child("task_takers").child(this.id).removeEventListener(eventListeners.get("takers"));
       eventListeners.remove("takers");
     }
-    if(eventListeners.containsKey("duedate")) {
-      taskRef.child("task_duedate").child(this.id).removeEventListener(eventListeners.get("duedate"));
+    if (eventListeners.containsKey("duedate")) {
+      taskRef.child("task_duedate").child(this.id)
+          .removeEventListener(eventListeners.get("duedate"));
       eventListeners.remove("duedate");
     }
   }
 
+  public static long getEpochFromDueDate(HashMap<String, Integer> dateTime) {
+    Calendar dueDateCal = Calendar.getInstance();
+    dueDateCal
+        .set(dateTime.get("year"), dateTime.get("month"), dateTime.get("day"), dateTime.get("hour"),
+            dateTime.get("minute"));
+    return dueDateCal.getTimeInMillis();
+  }
 }

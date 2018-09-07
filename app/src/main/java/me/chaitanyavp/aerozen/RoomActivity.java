@@ -900,6 +900,10 @@ public class RoomActivity extends AppCompatActivity {
     datePickerDialog.setOnDismissListener(dateDismiss);
     timePickerDialog.setOnDismissListener(timeDismiss);
 
+    if (task!= null && task.getDueDate() != 0) {
+      dueDateCheckBox.setChecked(true);
+    }
+
     dueDateCheckBox.setOnCheckedChangeListener(
         new CompoundButton.OnCheckedChangeListener() {
           @Override
@@ -958,6 +962,9 @@ public class RoomActivity extends AppCompatActivity {
     });
 
     final ArrayList<String> takers = new ArrayList<>();
+    if(task != null){
+      takers.addAll(task.getTakers());
+    }
     final Button selectTakerButton = new Button(this);
     selectTakerButton.setText("Select takers");
     selectTakerButton.setOnClickListener(new OnClickListener() {
@@ -966,6 +973,13 @@ public class RoomActivity extends AppCompatActivity {
         createMemberSelectDialog(task, takers).show();
       }
     });
+
+    if (task != null) {
+      builder.setTitle("Update Task");
+      taskInput.setText(task.getText());
+      pointSlider.setProgress(task.getPoints());
+    }
+
     alertLayout.addView(taskInput);
     alertLayout.addView(dueDateLayout);
     alertLayout.addView(pointSlider);
@@ -996,7 +1010,7 @@ public class RoomActivity extends AppCompatActivity {
           taskRef.child("task_takers").child(task.getId()).setValue(takerString);
 
           if (dueDateCheckBox.isChecked() && !dateTime.values().contains(-1)) {
-            taskRef.child("task_duedate").child(task.getId()).setValue(dateTime);
+            taskRef.child("task_duedate").child(task.getId()).setValue(Task.getEpochFromDueDate(dateTime));
           } else if (!dueDateCheckBox.isChecked()) {
             taskRef.child("task_duedate").child(task.getId()).setValue(0);
           }
@@ -1025,14 +1039,6 @@ public class RoomActivity extends AppCompatActivity {
         dialog.cancel();
       }
     });
-    if (task != null) {
-      builder.setTitle("Update Task");
-      taskInput.setText(task.getText());
-      pointSlider.setProgress(task.getPriority());
-      if (task.getDueDate() != 0) {
-        dueDateCheckBox.setChecked(true);
-      }
-    }
     return builder.create();
   }
 
