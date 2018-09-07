@@ -57,7 +57,17 @@
       android:layout_height="wrap_content"
       android:layout_margin="10dp"
       android:layout_gravity="center_horizontal"
+      android:padding="10dp"
       android:background="@color/colorAccent"
       android:text="View all completed Tasks" />
+    <Button
+      android:id="@+id/all_archived_boards"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="10dp"
+      android:layout_gravity="center_horizontal"
+      android:padding="10dp"
+      android:background="#ffdc5d"
+      android:text="View Archived Boards" />
 
 </LinearLayout>

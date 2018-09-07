@@ -64,7 +64,15 @@ public class MainPageFragment extends Fragment {
     viewAllCompletedTasks.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
-        allCompletedTasksDialog("", getContext()).show();
+        allCompletedTasksDialog("").show();
+      }
+    });
+
+    Button viewArchivedBoards = rootView.findViewById(R.id.all_archived_boards);
+    viewArchivedBoards.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        allArchivedBoardsDialog().show();
       }
     });
     return rootView;
@@ -131,6 +139,50 @@ public class MainPageFragment extends Fragment {
       }
     });
 
+    newCard.addView(completedBox);
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT
+    );
+    Resources r = context.getResources();
+    final int TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        r.getDisplayMetrics()
+    );
+    params.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    newCard.setLayoutParams(params);
+
+    CardView.LayoutParams cardParams = new CardView.LayoutParams(
+        CardView.LayoutParams.WRAP_CONTENT,
+        CardView.LayoutParams.WRAP_CONTENT
+    );
+    final int SIXTEEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        16,
+        r.getDisplayMetrics()
+    );
+    cardParams.setMargins(SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP, SIXTEEN_DP);
+    completedBox.setLayoutParams(cardParams);
+    return newCard;
+  }
+
+  private View createViewForArchivedBoard(final String boardID, final String boardName,
+      final RoomActivity roomActivity){
+    Context context = roomActivity.getApplicationContext();
+    CardView newCard = new CardView(context);
+
+    CheckBox completedBox = new CheckBox(context);
+    completedBox.setText(boardName);
+    completedBox.setChecked(true);
+    completedBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        if(!b) {
+          roomActivity.unCompleteBoard(boardID);
+        }
+      }
+    });
     newCard.addView(completedBox);
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -286,7 +338,8 @@ public class MainPageFragment extends Fragment {
     return builder.create();
   }
 
-  private AlertDialog allCompletedTasksDialog(final String boardToPut, final Context context){
+  private AlertDialog allCompletedTasksDialog(final String boardToPut){
+    Context context = getContext();
     final AlertDialog.Builder builder = new AlertDialog.Builder(context);
     final ScrollView scrollView = new ScrollView(context);
     final LinearLayout alertLayout = new LinearLayout(context);
@@ -377,6 +430,73 @@ public class MainPageFragment extends Fragment {
         }
       });
     }
+    scrollView.addView(alertLayout);
+    builder.setView(scrollView);
+
+    builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    return builder.create();
+  }
+
+  private AlertDialog allArchivedBoardsDialog(){
+    Context context = getContext();
+    final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+    final ScrollView scrollView = new ScrollView(context);
+    final LinearLayout alertLayout = new LinearLayout(context);
+    LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+    builder.setTitle("Archived Boards");
+    int TEN_DP = (int) TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        10,
+        getResources().getDisplayMetrics()
+    );
+    final RoomActivity roomActivity = ((RoomActivity) getActivity());
+
+    alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+    alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    alertLayout.setOrientation(LinearLayout.VERTICAL);
+    alertLayout.setLayoutParams(alertLayoutParams);
+    alertLayout.setPadding(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+
+    final HashMap<String, View> archivedBoardViews = new HashMap<>();
+
+    final DatabaseReference dataRef =
+        roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/rooms/" + roomActivity.getRoomID()
+            + "/completed_boards");
+    dataRef.addChildEventListener(new ChildEventListener(){
+      @Override
+      public void onChildAdded(@NonNull final DataSnapshot dataSnapshot, @Nullable String s) {
+        final String boardID = dataSnapshot.getKey();
+        final String boardName = dataSnapshot.getValue().toString();
+        View boardView = createViewForArchivedBoard(boardID, boardName, roomActivity);
+        alertLayout.addView(boardView);
+        archivedBoardViews.put(boardID, boardView);
+      }
+      @Override
+      public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+      }
+      @Override
+      public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+        if(archivedBoardViews.containsKey(dataSnapshot.getKey())) {
+          View boardView = archivedBoardViews.remove(dataSnapshot.getKey());
+          alertLayout.removeView(boardView);
+        }
+      }
+      @Override
+      public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+      }
+      @Override
+      public void onCancelled(@NonNull DatabaseError databaseError) {
+
+      }
+    });
     scrollView.addView(alertLayout);
     builder.setView(scrollView);
 
