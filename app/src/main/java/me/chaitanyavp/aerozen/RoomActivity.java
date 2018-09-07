@@ -522,10 +522,9 @@ public class RoomActivity extends AppCompatActivity {
     return database.getReferenceFromUrl(url);
   }
 
-  private void addTaskToDatabase(Task task) {
-    int position = mViewPager.getCurrentItem() - 1;
+  private void addTaskToDatabase(Task task, String boardID) {
     database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/"
-        + boardList.get(position) + "/").child("tasks").child(task.getId())
+        + boardID + "/").child("tasks").child(task.getId())
         .setValue(task.getText());
     DatabaseReference taskRef = database
         .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
@@ -618,6 +617,36 @@ public class RoomActivity extends AppCompatActivity {
       database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardName
           + "/completed_tasks/" + completedTaskID).setValue(null);
     }
+  }
+
+  private AlertDialog deleteTaskDialog(final String taskID, final String boardID) {
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Are you sure you want to permanently delete this task?");
+    builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialogInterface, int i) {
+        Task completedTask = allTasks.get(taskID);
+        if (completedTask != null) {
+          database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID
+              + "/tasks/" + taskID).setValue(null);
+          DatabaseReference taskRef = database
+              .getReferenceFromUrl("https://kanban-f611c.firebaseio.com/");
+          taskRef.child("task_duedate").child(taskID).setValue(null);
+          taskRef.child("task_priority").child(taskID).setValue(null);
+          taskRef.child("task_takers").child(taskID).setValue(null);
+          taskRef.child("task_points").child(taskID).setValue(null);
+          taskRef.child("task_creator").child(taskID).setValue(null);
+          taskRef.child("task_room").child(taskID).setValue(null);
+        }
+      }
+    });
+    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    return builder.create();
   }
 
   private AlertDialog addRoomMemberDialog() {
@@ -1028,7 +1057,8 @@ public class RoomActivity extends AppCompatActivity {
           for(String taker : takers) {
             newTask.addTaker(taker);
           }
-          addTaskToDatabase(newTask); //TODO: Phase out this method, remove setters from task object.
+          //TODO: Phase out this method, remove setters from task object.
+          addTaskToDatabase(newTask, selectedBoard.get("board"));
         }
 
       }
@@ -1039,6 +1069,14 @@ public class RoomActivity extends AppCompatActivity {
         dialog.cancel();
       }
     });
+    if (task != null){
+      builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialogInterface, int i) {
+          deleteTaskDialog(task.getId(), boardName).show();
+        }
+      });
+    }
     return builder.create();
   }
 
@@ -1175,12 +1213,6 @@ public class RoomActivity extends AppCompatActivity {
             roomActivity.createBoardEditDialog(boardID).show();
           }
         });
-//        LinearLayout parentLayout = rootView.findViewById(R.id.task_layout);
-
-//        for (String taskName : taskMapList.get(boardID)) {
-//          addCard(parentLayout, ((RoomActivity) getActivity()).getExistingTask(taskName),
-//              boardName, context);
-//        }
       }
 
       return rootView;
