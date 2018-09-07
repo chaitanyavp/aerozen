@@ -241,7 +241,11 @@ public class MainPageFragment extends Fragment {
     final HashMap<String, View> completedTaskViews = new HashMap<>();
     final HashMap<String, Integer> completedTaskPoints = new HashMap<>();
 
-    for(final String boardID : roomActivity.getBoardList()) {
+    ArrayList<String> boardsToGoThrough = new ArrayList<String>();
+    boardsToGoThrough.addAll(roomActivity.getBoardList());
+    boardsToGoThrough.addAll(roomActivity.getArchivedBoards().keySet());
+
+    for(final String boardID : boardsToGoThrough) {
       final DatabaseReference dataRef =
           roomActivity.getRefFromUrl("https://kanban-f611c.firebaseio.com/boards/" + boardID + "/completed_tasks");
       dataRef.addChildEventListener(new ChildEventListener(){
@@ -368,12 +372,12 @@ public class MainPageFragment extends Fragment {
     final HashMap<String, View> completedTaskViews = new HashMap<>();
     final HashMap<String, Integer> completedTaskPoints = new HashMap<>();
 
-    ArrayList<String> boardsToGoThrough;
+    ArrayList<String> boardsToGoThrough = new ArrayList<String>();
     if(boardToPut.equals("")) {
-      boardsToGoThrough = roomActivity.getBoardList();
+      boardsToGoThrough.addAll(roomActivity.getBoardList());
+      boardsToGoThrough.addAll(roomActivity.getArchivedBoards().keySet());
     }
     else{
-      boardsToGoThrough = new ArrayList<String>();
       boardsToGoThrough.add(boardToPut);
     }
 

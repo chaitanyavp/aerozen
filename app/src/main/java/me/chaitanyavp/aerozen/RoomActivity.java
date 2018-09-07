@@ -89,6 +89,7 @@ public class RoomActivity extends AppCompatActivity {
   private HashMap<String, ArrayList<String>> boardTaskList;
   private HashMap<String, Task> allTasks;
   private HashMap<String, String> boardNames;
+  private HashMap<String, String> archivedBoards;
   private HashMap<String, Integer> boardOrder;
   private HashMap<String, String> roomMembers;
   private Calendar calendar;
@@ -184,6 +185,7 @@ public class RoomActivity extends AppCompatActivity {
     allTasks = new HashMap<String, Task>();
 
     boardNames = new HashMap<String, String>();
+    archivedBoards = new HashMap<String, String>();
     boardOrder = new HashMap<String, Integer>();
     roomMembers = new HashMap<String, String>();
     roomMembers.put(userID, userEmail);
@@ -212,6 +214,28 @@ public class RoomActivity extends AppCompatActivity {
           @Override
           public void onCancelled(@NonNull DatabaseError databaseError) {
 
+          }
+        });
+
+    database.getReferenceFromUrl("https://kanban-f611c.firebaseio.com/rooms/"+roomID+"/completed_boards/")
+        .addChildEventListener(new ChildEventListener() {
+          @Override
+          public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            archivedBoards.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
+          }
+          @Override
+          public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            archivedBoards.put(dataSnapshot.getKey(), (String) dataSnapshot.getValue());
+          }
+          @Override
+          public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            archivedBoards.remove(dataSnapshot.getKey());
+          }
+          @Override
+          public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+          }
+          @Override
+          public void onCancelled(@NonNull DatabaseError databaseError) {
           }
         });
 
@@ -1014,6 +1038,10 @@ public class RoomActivity extends AppCompatActivity {
 
   public ArrayList<String> getBoardList() {
     return boardList;
+  }
+
+  public HashMap<String, String> getArchivedBoards() {
+    return archivedBoards;
   }
 
   public HashMap<String, String> getRoomMembers() {
