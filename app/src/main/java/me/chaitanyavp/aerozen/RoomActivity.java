@@ -1009,6 +1009,9 @@ public class RoomActivity extends AppCompatActivity {
       taskInput.setText(task.getText());
       pointSlider.setProgress(task.getPoints());
     }
+    else{
+      builder.setTitle("Add Task");
+    }
 
     alertLayout.addView(taskInput);
     alertLayout.addView(dueDateLayout);
