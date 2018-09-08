@@ -10,3 +10,7 @@ Features:
 <li>Track each member's contributions</li>
 <li>Flexibly designed to accommodate your use case</li>
 </ul>
+
+<img src="https://i.imgur.com/x3GEGX6.gif" style="float:left;"width="256">
+<img src="https://imgur.com/a/fdQMS0X.gif" style="float:center;"width="256">
+<img src="https://imgur.com/a/2HdxtHr.gif" style="float:right;"width="256">
