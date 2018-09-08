@@ -17,12 +17,6 @@
     android:paddingTop="@dimen/appbar_padding_top"
     android:theme="@style/AppTheme.AppBarOverlay">
 
-    <TextView
-      android:id="@+id/test"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:layout_weight="1"
-      android:text="TextView" />
     <android.support.v7.widget.Toolbar
       android:id="@+id/toolbar"
       android:layout_width="match_parent"
@@ -54,6 +48,7 @@
     android:layout_alignParentBottom="true"
     app:menu_colorNormal="@color/colorAccent"
     app:menu_colorPressed="@color/colorAccent"
+    app:menu_fab_label="Add"
     fab:menu_animationDelayPerItem="55"
     fab:menu_backgroundColor="@android:color/transparent"
     fab:menu_buttonSpacing="0dp"
@@ -97,9 +92,9 @@
       android:id="@+id/fab2"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
+      android:src="@drawable/fab_add"
       app:fab_colorNormal="@color/colorAccent"
       app:fab_colorPressed="@color/colorAccent"
-      android:src="@drawable/fab_add"
       app:fab_label="Add Board"
       fab:fab_size="mini" />
 
@@ -107,9 +102,9 @@
       android:id="@+id/fab3"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
+      android:src="@drawable/fab_add"
       app:fab_colorNormal="@color/colorAccent"
       app:fab_colorPressed="@color/colorAccent"
-      android:src="@drawable/fab_add"
       fab:fab_label="Add Task"
       fab:fab_size="mini" />
   </com.github.clans.fab.FloatingActionMenu>

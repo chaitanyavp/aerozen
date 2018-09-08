@@ -105,7 +105,6 @@ public class RoomActivity extends AppCompatActivity {
   private String roomID;
   private String userID;
   private String userEmail;
-  private TextView t;
   private Toolbar toolbar;
 
   @Override
@@ -153,6 +152,7 @@ public class RoomActivity extends AppCompatActivity {
         else{
           Snackbar.make(toolbar, "You do not have permission.", Snackbar.LENGTH_LONG).show();
         }
+        fam.close(true);
       }
     });
 
@@ -171,9 +171,6 @@ public class RoomActivity extends AppCompatActivity {
     roomID = intent.getStringExtra("room_id");
     userID = intent.getStringExtra("user_id");
     userEmail = intent.getStringExtra("user_email");
-
-    t = findViewById(R.id.test);
-    t.setText("Started" + roomID);
 
     database = FirebaseDatabase.getInstance();
     boardList = new ArrayList<String>();
@@ -447,8 +444,6 @@ public class RoomActivity extends AppCompatActivity {
     for (String taskName : removedTasks) {
       allTasks.remove(taskName);
     }
-
-    t.setText(t.getText() + "Removed" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
@@ -467,7 +462,6 @@ public class RoomActivity extends AppCompatActivity {
   }
 
   private void updateBoard(String key) {
-    t.setText(t.getText() + "updated" + key);
     mSectionsPagerAdapter.updateTasks(boardTaskList);
     mSectionsPagerAdapter.notifyDataSetChanged();
   }
@@ -508,10 +502,6 @@ public class RoomActivity extends AppCompatActivity {
 
   public String getRoomID() {
     return roomID;
-  }
-
-  public void addHeader(String s){
-    t.setText(t.getText() + "," + s);
   }
 
   public void showSnackBar(String s) {
@@ -869,8 +859,8 @@ public class RoomActivity extends AppCompatActivity {
     final LinearLayout alertLayout = new LinearLayout(this);
     LinearLayout.LayoutParams alertLayoutParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-
     alertLayoutParams.setMargins(TEN_DP, TEN_DP, TEN_DP, 0);
+
     alertLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     alertLayout.setOrientation(LinearLayout.VERTICAL);
     alertLayout.setLayoutParams(alertLayoutParams);
@@ -958,6 +948,11 @@ public class RoomActivity extends AppCompatActivity {
     taskInput.setInputType(InputType.TYPE_CLASS_TEXT);
     final SeekBar pointSlider = new SeekBar(this);
     pointSlider.setMax(100);
+    LinearLayout.LayoutParams pointParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    pointParams.setMargins(0, TEN_DP, 0, TEN_DP);
+    pointSlider.setLayoutParams(pointParams);
+
     final Spinner spinner = new Spinner(this);
 
     final ArrayList<String> boardListByNames = new ArrayList<>();
@@ -978,6 +973,12 @@ public class RoomActivity extends AppCompatActivity {
       }
     });
     spinner.setSelection(boardList.indexOf(boardName));
+
+    LinearLayout.LayoutParams spinnerParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    spinnerParams.setMargins(TEN_DP, TEN_DP, TEN_DP, TEN_DP);
+    spinner.setLayoutParams(spinnerParams);
+
     final HashMap<String,String> selectedBoard = new HashMap<>();
     selectedBoard.put("board", boardName);
     spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
