@@ -12,6 +12,6 @@ Features:
 </ul>
 <p align:"center">
 <img src="https://i.imgur.com/x3GEGX6.gif" style="float:left;"width="256">
-<img src="https://imgur.com/a/fdQMS0X.gif" style="float:center;"width="256">
-<img src="https://imgur.com/a/2HdxtHr.gif" style="float:right;"width="256">
+<img src="https://imgur.com/hnsYS4J.gif" style="float:center;"width="256">
+<img src="https://imgur.com/6SMRk0P.gif" style="float:right;"width="256">
 </p>
